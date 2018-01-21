@@ -7,38 +7,31 @@ namespace Meetup.Domain
     public class MeetupAggregate
     {
         private List<object> _pendingEvents = new List<object>();
-        private bool _cancelled;
-        private bool _opened;
+        private MeetupState _state = MeetupState.Empty;
 
         public void Publish()
         {
-            if (!_cancelled)
-            {
-                RaiseEvent(new MeetupRsvpOpenedEvent());
-            }
+            TryRaiseEvent(new MeetupRsvpOpenedEvent());
         }
 
         public void AcceptRsvp()
         {
-            if(!_cancelled && _opened)
-            {
-                RaiseEvent(new MeetupRsvpAcceptedEvent());
-            } 
+            TryRaiseEvent(new MeetupRsvpAcceptedEvent());
         }
         
         public void DeclineRsvp()
         {
-            RaiseEvent(new MeetupRsvpDeclinedEvent());
+            TryRaiseEvent(new MeetupRsvpDeclinedEvent());
         }
 
         public void Cancel()
         {
-            RaiseEvent(new MeetupCanceledEvent());
+            TryRaiseEvent(new MeetupCanceledEvent());
         }
 
         public void Close()
         {
-            RaiseEvent(new MeetupRsvpClosedEvent());
+            TryRaiseEvent(new MeetupRsvpClosedEvent());
         }
 
         public void Apply(object @event)
@@ -46,17 +39,17 @@ namespace Meetup.Domain
             switch(@event)
             {
                 case MeetupRsvpOpenedEvent opened:
-                    _opened = true;
+                    _state = MeetupState.Published;
                     break;
                 case MeetupRsvpAcceptedEvent rsvpAccepted:
                     break;
                 case MeetupRsvpDeclinedEvent rsvpDeclined:
                     break;
                 case MeetupCanceledEvent canceled:
-                    _cancelled = true;
+                    _state = MeetupState.Cancelled;
                     break;
                 case MeetupRsvpClosedEvent closed:
-                    _opened = false;
+                    _state = MeetupState.Closed;
                     break;
             }            
         }
@@ -65,10 +58,13 @@ namespace Meetup.Domain
 
         public void ClearEvent() => _pendingEvents.Clear();
 
-        private void RaiseEvent(object @event) 
+        private void TryRaiseEvent(object @event) 
         {
-            _pendingEvents.Add(@event);
-            Apply(@event);
+            if (_state.CanRaiseEvent(@event.GetType()))
+            {
+                _pendingEvents.Add(@event);
+                Apply(@event);
+            }
         }
     }
 }
