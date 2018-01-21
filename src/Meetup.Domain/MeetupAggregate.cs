@@ -6,16 +6,24 @@ namespace Meetup.Domain
 {
     public class MeetupAggregate
     {
-        public List<object> PendingEvents { get; } = new List<object>();
+        private List<object> _pendingEvents = new List<object>();
+        private bool _cancelled;
+        private bool _opened;
 
         public void Publish()
         {
-            RaiseEvent(new MeetupRsvpOpenedEvent());
+            if (!_cancelled)
+            {
+                RaiseEvent(new MeetupRsvpOpenedEvent());
+            }
         }
 
         public void AcceptRsvp()
         {
-            RaiseEvent(new MeetupRsvpAcceptedEvent());
+            if(!_cancelled && _opened)
+            {
+                RaiseEvent(new MeetupRsvpAcceptedEvent());
+            } 
         }
         
         public void DeclineRsvp()
@@ -38,21 +46,28 @@ namespace Meetup.Domain
             switch(@event)
             {
                 case MeetupRsvpOpenedEvent opened:
+                    _opened = true;
                     break;
                 case MeetupRsvpAcceptedEvent rsvpAccepted:
                     break;
                 case MeetupRsvpDeclinedEvent rsvpDeclined:
                     break;
                 case MeetupCanceledEvent canceled:
+                    _cancelled = true;
                     break;
                 case MeetupRsvpClosedEvent closed:
+                    _opened = false;
                     break;
             }            
         }
 
+        public IEnumerable<object> GetPendingEvents() => _pendingEvents;
+
+        public void ClearEvent() => _pendingEvents.Clear();
+
         private void RaiseEvent(object @event) 
         {
-            PendingEvents.Add(@event);
+            _pendingEvents.Add(@event);
             Apply(@event);
         }
     }
