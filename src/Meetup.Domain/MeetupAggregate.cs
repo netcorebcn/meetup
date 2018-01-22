@@ -38,6 +38,11 @@ namespace Meetup.Domain
             TryRaiseEvent(new MeetupRsvpClosedEvent(MeetupId));
         }
 
+        public void TakeAttendance(Guid memberId)
+        {
+            TryRaiseEvent(new MeetupMemberWentEvent(MeetupId, memberId));
+        } 
+
         public void Apply(object @event)
         {
             switch(@event)
@@ -54,6 +59,8 @@ namespace Meetup.Domain
                     break;
                 case MeetupRsvpClosedEvent closed:
                     _state = MeetupState.Closed;
+                    break;
+                case MeetupMemberWentEvent memberWent:
                     break;
             }            
         }

@@ -41,7 +41,8 @@ namespace Meetup.Domain
             raisableEvents: new Type[]
             {
                 typeof(MeetupCanceledEvent),
-                typeof(MeetupRsvpOpenedEvent)
+                typeof(MeetupRsvpOpenedEvent),
+                typeof(MeetupMemberWentEvent)
             }
         );
 

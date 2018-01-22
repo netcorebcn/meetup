@@ -37,14 +37,15 @@ namespace Meetup.Domain.Tests
             .WithTotalCount(2);
 
         [Fact]
-        public void Given_OpenedMeetup_When_AcceptRsvp_Then_RsvpAccepted() =>
+        public void Given_OpenedMeetup_When_AcceptingRsvp_Then_RsvpAccepted() =>
             ExecuteCommand(meetup =>
             {
                 meetup.Publish();
+                meetup.DeclineRsvp(Guid.NewGuid());
                 meetup.AcceptRsvp(Guid.NewGuid());
             })
             .GetPendingEvents().AssertLastEventOfType<MeetupRsvpAcceptedEvent>()
-            .WithTotalCount(2);
+            .WithTotalCount(3);
 
         [Fact]
         public void Given_ClosedMeetup_When_AcceptRsvp_Then_NotAccepted() =>
@@ -53,8 +54,21 @@ namespace Meetup.Domain.Tests
                 meetup.Publish();
                 meetup.Close();
                 meetup.AcceptRsvp(Guid.NewGuid());
+                meetup.DeclineRsvp(Guid.NewGuid());
             })
-            .GetPendingEvents().AssertLastEventOfType<MeetupRsvpClosedEvent>().WithTotalCount(2);
+            .GetPendingEvents().AssertLastEventOfType<MeetupRsvpClosedEvent>()
+            .WithTotalCount(2);
+
+        [Fact]
+        public void Given_ClosedMeetup_When_TakeAttendance_Then_MemberWent() =>
+            ExecuteCommand(meetup =>
+            {
+                meetup.Publish();
+                meetup.Close();
+                meetup.TakeAttendance(Guid.NewGuid());
+            })
+            .GetPendingEvents().AssertLastEventOfType<MeetupMemberWentEvent>()
+            .WithTotalCount(3);
 
         private MeetupAggregate ExecuteCommand(Action<MeetupAggregate> command)
         {

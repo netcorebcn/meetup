@@ -22,6 +22,7 @@ namespace Meetup.Domain.Tests
         [Theory]
         [InlineData(typeof(MeetupCanceledEvent))]
         [InlineData(typeof(MeetupRsvpOpenedEvent))]
+        [InlineData(typeof(MeetupMemberWentEvent))]
         public void Given_MeetupState_When_Closed_Then_CanRaiseEvent(Type eventType) => 
             Assert.True(MeetupState.Closed.CanRaiseEvent(eventType));
 
