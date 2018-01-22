@@ -5,7 +5,7 @@ using Meetup.Domain.Events;
 
 namespace Meetup.Domain
 {
-    public class MeetupState : Enumeration
+    public sealed class MeetupState : Enumeration
     {
         private readonly Type[] _raisableEvents;
 
@@ -14,7 +14,7 @@ namespace Meetup.Domain
 
         public bool CanRaiseEvent(Type @eventType) => _raisableEvents.Any(x => x == @eventType);
 
-        public static MeetupState Empty => new MeetupState
+        public static readonly MeetupState Empty = new MeetupState
         (
             nameof(Empty),
             raisableEvents: new Type[]
@@ -23,7 +23,7 @@ namespace Meetup.Domain
             }
         );
 
-        public static MeetupState Published => new MeetupState
+        public static readonly MeetupState Published = new MeetupState
         (
             nameof(Published),
             raisableEvents: new Type[]
@@ -35,7 +35,7 @@ namespace Meetup.Domain
             }
         );
 
-        public static MeetupState Closed => new MeetupState
+        public static readonly MeetupState Closed = new MeetupState
         (
             nameof(Closed),
             raisableEvents: new Type[]
@@ -45,7 +45,7 @@ namespace Meetup.Domain
             }
         );
 
-        public static MeetupState Cancelled => new MeetupState
+        public static readonly MeetupState Cancelled = new MeetupState
         (
             nameof(Cancelled),
             raisableEvents: new Type[]{}

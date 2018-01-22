@@ -39,5 +39,16 @@ namespace Meetup.Domain.Tests
         [InlineData(typeof(MeetupRsvpDeclinedEvent))]
         public void Given_MeetupState_When_Cancelled_Then_CanNotRaiseEvent(Type eventType) => 
             Assert.False(MeetupState.Cancelled.CanRaiseEvent(eventType));
+
+        [Fact]
+        public void Given_Two_MeetupStates_When_Comparing_Then_True()
+        {
+            var state = MeetupState.Cancelled;
+
+            Assert.True(state == MeetupState.Cancelled);
+            Assert.Equal(state, MeetupState.Cancelled);
+            Assert.False(state == MeetupState.Closed);
+            Assert.NotEqual(state, MeetupState.Closed);
+        }
     }
 }
