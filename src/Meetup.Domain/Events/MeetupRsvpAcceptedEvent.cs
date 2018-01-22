@@ -1,9 +1,14 @@
+using System;
+
 namespace Meetup.Domain.Events
 {
-    public class MeetupRsvpAcceptedEvent
+    public class MeetupRsvpAcceptedEvent : MeetupEvent
     {
-        public MeetupRsvpAcceptedEvent()
+        public Guid MemberId { get; }
+
+        public MeetupRsvpAcceptedEvent(Guid meetupId, Guid memberId) : base(meetupId)
         {
+            MemberId = memberId;
         }
     }
 }

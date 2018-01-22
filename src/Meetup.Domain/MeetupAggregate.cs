@@ -9,29 +9,33 @@ namespace Meetup.Domain
         private List<object> _pendingEvents = new List<object>();
         private MeetupState _state = MeetupState.Empty;
 
+        public Guid MeetupId { get; }
+
+        public MeetupAggregate(Guid meetupId) => MeetupId = meetupId;
+
         public void Publish()
         {
-            TryRaiseEvent(new MeetupRsvpOpenedEvent());
+            TryRaiseEvent(new MeetupRsvpOpenedEvent(MeetupId));
         }
 
-        public void AcceptRsvp()
+        public void AcceptRsvp(Guid memberId)
         {
-            TryRaiseEvent(new MeetupRsvpAcceptedEvent());
+            TryRaiseEvent(new MeetupRsvpAcceptedEvent(MeetupId, memberId));
         }
         
-        public void DeclineRsvp()
+        public void DeclineRsvp(Guid memberId)
         {
-            TryRaiseEvent(new MeetupRsvpDeclinedEvent());
+            TryRaiseEvent(new MeetupRsvpDeclinedEvent(MeetupId, memberId));
         }
 
         public void Cancel()
         {
-            TryRaiseEvent(new MeetupCanceledEvent());
+            TryRaiseEvent(new MeetupCanceledEvent(MeetupId));
         }
 
         public void Close()
         {
-            TryRaiseEvent(new MeetupRsvpClosedEvent());
+            TryRaiseEvent(new MeetupRsvpClosedEvent(MeetupId));
         }
 
         public void Apply(object @event)
@@ -60,7 +64,7 @@ namespace Meetup.Domain
 
         private void TryRaiseEvent(object @event) 
         {
-            if (_state.CanRaiseEvent(@event.GetType()))
+            if (@event != null && _state.CanRaiseEvent(@event.GetType()))
             {
                 _pendingEvents.Add(@event);
                 Apply(@event);

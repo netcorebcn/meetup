@@ -1,8 +1,10 @@
+using System;
+
 namespace Meetup.Domain.Events
 {
-    public class MeetupRsvpOpenedEvent
+    public class MeetupRsvpOpenedEvent : MeetupEvent
     {
-        public MeetupRsvpOpenedEvent()
+        public MeetupRsvpOpenedEvent(Guid meetupId) : base(meetupId)
         {
         }
     }

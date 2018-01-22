@@ -10,54 +10,58 @@ namespace Meetup.Domain.Tests
     public class MeetupAggregateTests
     {
         [Fact]
-        public void Given_NewMeetup_When_Publish_Then_RSVPOpened()
-        {
-            var meetup = new MeetupAggregate();
-            meetup.Publish();
-
-            meetup.GetPendingEvents().AssertLastEventOfType<MeetupRsvpOpenedEvent>().WithTotalCount(1);
-        }
-        
-        [Fact]
-        public void Given_Published_Meetup_When_Cancel_Then_Canceled()
-        {
-            var meetup = new MeetupAggregate();
-            meetup.Publish();
-            meetup.Cancel();
-
-            meetup.GetPendingEvents().AssertLastEventOfType<MeetupCanceledEvent>().WithTotalCount(2);
-        }
+        public void Given_NewMeetup_When_Publish_Then_RSVPOpened() => 
+            ExecuteCommand(meetup => meetup.Publish())
+                .GetPendingEvents().AssertLastEventOfType<MeetupRsvpOpenedEvent>()
+                .WithTotalCount(1);
 
         [Fact]
-        public void Given_Canceled_Meetup_When_Publish_Then_Still_Canceled()
-        {
-            var meetup = new MeetupAggregate();
-            meetup.Publish();
-            meetup.Cancel();
-            meetup.Publish();
-
-            meetup.GetPendingEvents().AssertLastEventOfType<MeetupCanceledEvent>().WithTotalCount(2);
-        }
-
-        [Fact]
-        public void Given_OpenedMeetup_When_AcceptRsvp_Then_RsvpAccepted()
-        {
-            var meetup = new MeetupAggregate();
-            meetup.Publish();
-            meetup.AcceptRsvp();
-
-            meetup.GetPendingEvents().AssertLastEventOfType<MeetupRsvpAcceptedEvent>().WithTotalCount(2);
-        }
+        public void Given_Published_Meetup_When_Cancel_Then_Canceled() =>
+            ExecuteCommand(meetup => 
+            {
+                meetup.Publish();
+                meetup.Cancel();
+            })
+            .GetPendingEvents().AssertLastEventOfType<MeetupCanceledEvent>()
+            .WithTotalCount(2);
 
         [Fact]
-        public void Given_ClosedMeetup_When_AcceptRsvp_Then_NotAccepted()
+        public void Given_Canceled_Meetup_When_Publish_Then_Still_Canceled() =>
+            ExecuteCommand(meetup => 
+            {
+                meetup.Publish();
+                meetup.Cancel();
+                meetup.Publish();
+            })
+            .GetPendingEvents().AssertLastEventOfType<MeetupCanceledEvent>()
+            .WithTotalCount(2);
+
+        [Fact]
+        public void Given_OpenedMeetup_When_AcceptRsvp_Then_RsvpAccepted() =>
+            ExecuteCommand(meetup =>
+            {
+                meetup.Publish();
+                meetup.AcceptRsvp(Guid.NewGuid());
+            })
+            .GetPendingEvents().AssertLastEventOfType<MeetupRsvpAcceptedEvent>()
+            .WithTotalCount(2);
+
+        [Fact]
+        public void Given_ClosedMeetup_When_AcceptRsvp_Then_NotAccepted() =>
+            ExecuteCommand(meetup =>
+            {
+                meetup.Publish();
+                meetup.Close();
+                meetup.AcceptRsvp(Guid.NewGuid());
+            })
+            .GetPendingEvents().AssertLastEventOfType<MeetupRsvpClosedEvent>().WithTotalCount(2);
+
+        private MeetupAggregate ExecuteCommand(Action<MeetupAggregate> command)
         {
-            var meetup = new MeetupAggregate();
-            meetup.Publish();
-            meetup.Close();
-            meetup.AcceptRsvp();
-            
-            meetup.GetPendingEvents().AssertLastEventOfType<MeetupRsvpClosedEvent>().WithTotalCount(2);
+            var meetupId = Guid.NewGuid();
+            var meetup = new MeetupAggregate(meetupId);
+            command(meetup);
+            return meetup;
         }
     }
 
