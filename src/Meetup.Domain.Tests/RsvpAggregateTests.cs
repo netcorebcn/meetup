@@ -51,6 +51,7 @@ namespace Meetup.Domain.Tests
         [Fact]
         public void Test()
         {
+            var meetupId = Guid.NewGuid();
             var bill = Guid.NewGuid();
             var joe = Guid.NewGuid();
             var susan = Guid.NewGuid();
@@ -58,10 +59,9 @@ namespace Meetup.Domain.Tests
 
             var memberList = new List<Guid>() { bill, joe, susan };
             var waitingList = new List<Guid>() { carla };
-            var newNumberOfSpots = 2;
 
             var aggregate = new RsvpAggregate(memberList, waitingList, numberOfSpots: 3);
-            aggregate= RsvpAggregate.Reduce(aggregate, newNumberOfSpots);
+            aggregate= aggregate.Reduce(new MeetupNumberOfSpotsChangedEvent(meetupId, 2));
 
             aggregate.MembersGoing.AssertEqual(bill, joe);
             aggregate.MembersWaiting.AssertEqual(susan, carla);

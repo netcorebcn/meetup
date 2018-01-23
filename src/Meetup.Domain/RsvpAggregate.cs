@@ -40,23 +40,23 @@ namespace Meetup.Domain
                     break;
 
                 case MeetupRsvpAcceptedEvent rsvpAccepted:
-                    UpdateMembersGoingList(state, rsvpAccepted.MemberId);
+                    state = Reduce(state, rsvpAccepted);
                     break;
 
                 case MeetupRsvpDeclinedEvent rsvpDeclined:
-                    UpdateWaitingList(state, rsvpDeclined.MemberId);
+                    state = Reduce(state, rsvpDeclined);
                     break;
 
                 case MeetupNumberOfSpotsChangedEvent spotsChanged:
-                    state = Reduce(state, spotsChanged.NumberOfSpots);
+                    state = Reduce(state, spotsChanged);
                     break;
             }
             return state;
         }
 
-        public static RsvpAggregate Reduce(RsvpAggregate state, int newNumberOfSpots)
+        private static RsvpAggregate Reduce(RsvpAggregate state, MeetupNumberOfSpotsChangedEvent @event)
         {
-            var diff = newNumberOfSpots - state._numberOfSpots; 
+            var diff = @event.NumberOfSpots - state._numberOfSpots; 
 
             if (diff > 0)
             {
@@ -78,8 +78,9 @@ namespace Meetup.Domain
             return state;
         }
 
-        private static void UpdateWaitingList(RsvpAggregate state, Guid memberId)
+        private static RsvpAggregate Reduce(RsvpAggregate state, MeetupRsvpDeclinedEvent @event)
         {
+            var memberId = @event.MemberId;
             state.MembersNotGoing.Add(memberId);
             state.MembersGoing.Remove(memberId);
             state.MembersWaiting.Remove(memberId);
@@ -93,10 +94,12 @@ namespace Meetup.Domain
                     state.MembersWaiting.Remove(firstMemberWaiting);
                 }
             }
+            return state;
         }
         
-        private static void UpdateMembersGoingList(RsvpAggregate state, Guid memberId)
+        private static RsvpAggregate Reduce(RsvpAggregate state, MeetupRsvpAcceptedEvent @event)
         {
+            var memberId = @event.MemberId;
             if (!state.MembersGoing.Contains(memberId))
             {
                 if (state._numberOfSpots > state.MembersGoing.Count)
@@ -108,6 +111,7 @@ namespace Meetup.Domain
                     state.MembersWaiting.Add(memberId);
                 }
             }
+            return state;
         }
     }
 
