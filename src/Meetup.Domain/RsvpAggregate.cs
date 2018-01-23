@@ -19,7 +19,14 @@ namespace Meetup.Domain
         {
         }
 
-        public static RsvpAggregate Create(Guid meetupId, params object[] events)
+        public RsvpAggregate(List<Guid> membersGoing, List<Guid> membersWaiting, int numberOfSpots)
+        {
+            MembersGoing = membersGoing;
+            MembersWaiting = membersWaiting;
+            _numberOfSpots = numberOfSpots;
+        }
+
+        public static RsvpAggregate Create(params object[] events)
         {
             return events.Aggregate(new RsvpAggregate(), Reduce);
         }
@@ -39,7 +46,35 @@ namespace Meetup.Domain
                 case MeetupRsvpDeclinedEvent rsvpDeclined:
                     UpdateWaitingList(state, rsvpDeclined.MemberId);
                     break;
+
+                case MeetupNumberOfSpotsChangedEvent spotsChanged:
+                    state = Reduce(state, spotsChanged.NumberOfSpots);
+                    break;
             }
+            return state;
+        }
+
+        public static RsvpAggregate Reduce(RsvpAggregate state, int newNumberOfSpots)
+        {
+            var diff = newNumberOfSpots - state._numberOfSpots; 
+
+            if (diff > 0)
+            {
+                var membersWaiting = state.MembersWaiting.Take(diff);
+                var membersWaitingCount = state.MembersWaiting.Count;
+                state.MembersWaiting.RemoveRange(membersWaitingCount - diff, diff); 
+                state.MembersGoing.AddRange(membersWaiting);
+            }
+            else
+            {
+                var takeLast = Math.Abs(diff);
+                var membersGoing = state.MembersGoing.TakeLast(takeLast);
+                state.MembersWaiting.InsertRange(0, membersGoing);
+                
+                var membersGoingCount = state.MembersGoing.Count;
+                state.MembersGoing.RemoveRange(membersGoingCount - takeLast, takeLast);
+            }
+
             return state;
         }
 
@@ -74,5 +109,14 @@ namespace Meetup.Domain
                 }
             }
         }
+    }
+
+    public static class RsvpAggregateExtensions
+    {
+        public static RsvpAggregate Reduce(this RsvpAggregate aggregate, object @event) =>
+            RsvpAggregate.Reduce(aggregate, @event);
+
+        public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int N) => 
+            source.Skip(Math.Max(0, source.Count() - N));
     }
 }

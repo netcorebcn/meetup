@@ -17,55 +17,58 @@ namespace Meetup.Domain.Tests
             var susan = Guid.NewGuid();
             var carla = Guid.NewGuid();
 
-            var rsvpAggregate = RsvpAggregate.Create(
-                meetupId, 
-                new MeetupRsvpOpenedEvent(meetupId, numberOfSpots: 2));
+            var aggregate = RsvpAggregate.Create(meetupId, new MeetupRsvpOpenedEvent(meetupId, numberOfSpots: 2));
+            aggregate.MembersGoing.AssertEqual();
+            aggregate.MembersWaiting.AssertEqual();
+            aggregate.MembersNotGoing.AssertEqual();
 
-            rsvpAggregate.MembersGoing.AssertEqual();
-            rsvpAggregate.MembersWaiting.AssertEqual();
-            rsvpAggregate.MembersNotGoing.AssertEqual();
+            aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, bill));
+            aggregate.MembersGoing.AssertEqual(bill);
+            aggregate.MembersWaiting.AssertEqual();
+            aggregate.MembersNotGoing.AssertEqual();
 
-            rsvpAggregate = RsvpAggregate.Reduce(
-                rsvpAggregate, 
-                new MeetupRsvpAcceptedEvent(meetupId, bill));
+            aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, joe));
+            aggregate.MembersGoing.AssertEqual(bill, joe);
+            aggregate.MembersWaiting.AssertEqual();
+            aggregate.MembersNotGoing.AssertEqual();
 
-            rsvpAggregate.MembersGoing.AssertEqual(bill);
-            rsvpAggregate.MembersWaiting.AssertEqual();
-            rsvpAggregate.MembersNotGoing.AssertEqual();
-
-            rsvpAggregate = RsvpAggregate.Reduce(
-                rsvpAggregate, 
-                new MeetupRsvpAcceptedEvent(meetupId, joe));
-
-            rsvpAggregate.MembersGoing.AssertEqual(bill, joe);
-            rsvpAggregate.MembersWaiting.AssertEqual();
-            rsvpAggregate.MembersNotGoing.AssertEqual();
-
-            rsvpAggregate = RsvpAggregate.Reduce(
-                rsvpAggregate, 
-                new MeetupRsvpAcceptedEvent(meetupId, susan));
-
-            rsvpAggregate.MembersGoing.AssertEqual(bill, joe);
-            rsvpAggregate.MembersWaiting.AssertEqual(susan);
-            rsvpAggregate.MembersNotGoing.AssertEqual();
+            aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, susan));
+            aggregate.MembersGoing.AssertEqual(bill, joe);
+            aggregate.MembersWaiting.AssertEqual(susan);
+            aggregate.MembersNotGoing.AssertEqual();
                 
-            rsvpAggregate = RsvpAggregate.Reduce(
-                rsvpAggregate, 
-                new MeetupRsvpAcceptedEvent(meetupId, carla));
+            aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, carla));
+            aggregate.MembersGoing.AssertEqual(bill, joe);
+            aggregate.MembersWaiting.AssertEqual(susan, carla);
+            aggregate.MembersNotGoing.AssertEqual();
 
-            rsvpAggregate.MembersGoing.AssertEqual(bill, joe);
-            rsvpAggregate.MembersWaiting.AssertEqual(susan, carla);
-            rsvpAggregate.MembersNotGoing.AssertEqual();
+            aggregate.Reduce(new MeetupRsvpDeclinedEvent(meetupId, bill));
+            aggregate.MembersGoing.AssertEqual(joe, susan);
+            aggregate.MembersWaiting.AssertEqual(carla);
+            aggregate.MembersNotGoing.AssertEqual(bill);
+        }
 
-            rsvpAggregate = RsvpAggregate.Reduce(
-                rsvpAggregate, 
-                new MeetupRsvpDeclinedEvent(meetupId, bill));
+        [Fact]
+        public void Test()
+        {
+            var bill = Guid.NewGuid();
+            var joe = Guid.NewGuid();
+            var susan = Guid.NewGuid();
+            var carla = Guid.NewGuid();
 
-            rsvpAggregate.MembersGoing.AssertEqual(joe, susan);
-            rsvpAggregate.MembersWaiting.AssertEqual(carla);
-            rsvpAggregate.MembersNotGoing.AssertEqual(bill);
+            var memberList = new List<Guid>() { bill, joe, susan };
+            var waitingList = new List<Guid>() { carla };
+            var newNumberOfSports = 2;
+
+            var aggregate = new RsvpAggregate(memberList, waitingList, numberOfSpots: 3);
+            aggregate= RsvpAggregate.Reduce(aggregate, newNumberOfSports);
+
+            aggregate.MembersGoing.AssertEqual(bill, joe);
+            aggregate.MembersWaiting.AssertEqual(susan, carla);
         }
     }
+
+
     public static class RsvpAggregateTestsExtensions
     {
         public static void AssertEqual(this List<Guid> list, params Guid[] guids)
