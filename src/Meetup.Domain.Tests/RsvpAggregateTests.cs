@@ -58,10 +58,10 @@ namespace Meetup.Domain.Tests
 
             var memberList = new List<Guid>() { bill, joe, susan };
             var waitingList = new List<Guid>() { carla };
-            var newNumberOfSports = 2;
+            var newNumberOfSpots = 2;
 
             var aggregate = new RsvpAggregate(memberList, waitingList, numberOfSpots: 3);
-            aggregate= RsvpAggregate.Reduce(aggregate, newNumberOfSports);
+            aggregate= RsvpAggregate.Reduce(aggregate, newNumberOfSpots);
 
             aggregate.MembersGoing.AssertEqual(bill, joe);
             aggregate.MembersWaiting.AssertEqual(susan, carla);
