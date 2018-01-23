@@ -61,9 +61,10 @@ namespace Meetup.Domain
             if (diff > 0)
             {
                 var membersWaiting = state.MembersWaiting.Take(diff);
+                state.MembersGoing.AddRange(membersWaiting);
+
                 var membersWaitingCount = state.MembersWaiting.Count;
                 state.MembersWaiting.RemoveRange(membersWaitingCount - diff, diff); 
-                state.MembersGoing.AddRange(membersWaiting);
             }
             else
             {
