@@ -31,7 +31,8 @@ namespace Meetup.Domain
                 typeof(MeetupCanceledEvent),
                 typeof(MeetupRsvpClosedEvent),
                 typeof(MeetupRsvpAcceptedEvent),
-                typeof(MeetupRsvpDeclinedEvent)
+                typeof(MeetupRsvpDeclinedEvent),
+                typeof(MeetupNumberOfSpotsChangedEvent)
             }
         );
 

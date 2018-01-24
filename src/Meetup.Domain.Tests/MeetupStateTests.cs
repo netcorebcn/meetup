@@ -11,6 +11,7 @@ namespace Meetup.Domain.Tests
         [InlineData(typeof(MeetupRsvpClosedEvent))]
         [InlineData(typeof(MeetupRsvpAcceptedEvent))]
         [InlineData(typeof(MeetupRsvpDeclinedEvent))]
+        [InlineData(typeof(MeetupNumberOfSpotsChangedEvent))]
         public void Given_MeetupState_When_Published_Then_CanRaiseEvent(Type eventType) => 
             Assert.True(MeetupState.Published.CanRaiseEvent(eventType));
 
@@ -38,6 +39,7 @@ namespace Meetup.Domain.Tests
         [InlineData(typeof(MeetupRsvpOpenedEvent))]
         [InlineData(typeof(MeetupRsvpAcceptedEvent))]
         [InlineData(typeof(MeetupRsvpDeclinedEvent))]
+        [InlineData(typeof(MeetupNumberOfSpotsChangedEvent))]
         public void Given_MeetupState_When_Cancelled_Then_CanNotRaiseEvent(Type eventType) => 
             Assert.False(MeetupState.Cancelled.CanRaiseEvent(eventType));
 

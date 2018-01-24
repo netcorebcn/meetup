@@ -7,41 +7,33 @@ namespace Meetup.Domain
     public class MeetupAggregate
     {
         private List<object> _pendingEvents = new List<object>();
+        
         private MeetupState _state = MeetupState.Empty;
 
         public Guid MeetupId { get; }
 
         public MeetupAggregate(Guid meetupId) => MeetupId = meetupId;
 
-        public void Publish()
-        {
+        public void Publish() => 
             TryRaiseEvent(new MeetupRsvpOpenedEvent(MeetupId));
-        }
 
-        public void AcceptRsvp(Guid memberId)
-        {
+        public void AcceptRsvp(Guid memberId) => 
             TryRaiseEvent(new MeetupRsvpAcceptedEvent(MeetupId, memberId));
-        }
-        
-        public void DeclineRsvp(Guid memberId)
-        {
+
+        public void DeclineRsvp(Guid memberId) => 
             TryRaiseEvent(new MeetupRsvpDeclinedEvent(MeetupId, memberId));
-        }
 
-        public void Cancel()
-        {
+        public void UpdateMeetupSpots(int numberOfSpots) => 
+            TryRaiseEvent(new MeetupNumberOfSpotsChangedEvent(MeetupId, numberOfSpots));
+
+        public void Cancel() => 
             TryRaiseEvent(new MeetupCanceledEvent(MeetupId));
-        }
 
-        public void Close()
-        {
+        public void Close() => 
             TryRaiseEvent(new MeetupRsvpClosedEvent(MeetupId));
-        }
 
-        public void TakeAttendance(Guid memberId)
-        {
+        public void TakeAttendance(Guid memberId) => 
             TryRaiseEvent(new MeetupMemberWentEvent(MeetupId, memberId));
-        } 
 
         public void Apply(object @event)
         {
@@ -50,17 +42,11 @@ namespace Meetup.Domain
                 case MeetupRsvpOpenedEvent opened:
                     _state = MeetupState.Published;
                     break;
-                case MeetupRsvpAcceptedEvent rsvpAccepted:
-                    break;
-                case MeetupRsvpDeclinedEvent rsvpDeclined:
-                    break;
                 case MeetupCanceledEvent canceled:
                     _state = MeetupState.Cancelled;
                     break;
                 case MeetupRsvpClosedEvent closed:
                     _state = MeetupState.Closed;
-                    break;
-                case MeetupMemberWentEvent memberWent:
                     break;
             }            
         }
