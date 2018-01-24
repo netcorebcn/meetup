@@ -118,12 +118,15 @@ namespace Meetup.Domain.Tests
                 .WithMembersGoing(bill, joe, susan)
                 .WithMembersWaiting(carla);
 
+            // reduce twice for testing idempotency
+            aggregate= aggregate.Reduce(new MeetupNumberOfSpotsChangedEvent(meetupId, 3));
             aggregate= aggregate.Reduce(new MeetupNumberOfSpotsChangedEvent(meetupId, 3));
 
             aggregate.MembersGoing.AssertEqual(bill, joe, susan);
             aggregate.MembersWaiting.AssertEqual(carla);
             aggregate.MembersNotGoing.AssertEqual();
         }
+
 
         [Fact]
         public void Given_RsvpAggregate_When_Reduce_With_More_NumberOfSpots_Then_ExpectedRsvpAggregate()
@@ -135,6 +138,8 @@ namespace Meetup.Domain.Tests
                 .WithMembersGoing(bill, joe, susan)
                 .WithMembersWaiting(carla);
 
+            // reduce twice for testing idempotency
+            aggregate= aggregate.Reduce(new MeetupNumberOfSpotsChangedEvent(meetupId, 4));
             aggregate= aggregate.Reduce(new MeetupNumberOfSpotsChangedEvent(meetupId, 4));
 
             aggregate.MembersGoing.AssertEqual(bill, joe, susan, carla);
@@ -152,6 +157,8 @@ namespace Meetup.Domain.Tests
                 .WithMembersGoing(bill, joe, susan)
                 .WithMembersWaiting(carla);
 
+            // reduce twice for testing idempotency
+            aggregate= aggregate.Reduce(new MeetupNumberOfSpotsChangedEvent(meetupId, 2));
             aggregate= aggregate.Reduce(new MeetupNumberOfSpotsChangedEvent(meetupId, 2));
 
             aggregate.MembersGoing.AssertEqual(bill, joe);
@@ -168,6 +175,8 @@ namespace Meetup.Domain.Tests
                 .WithNumberOfSpots(4)
                 .WithMembersGoing(bill, joe, susan, carla);
                 
+            // reduce twice for testing idempotency
+            aggregate= aggregate.Reduce(new MeetupRsvpDeclinedEvent(meetupId, bill));
             aggregate= aggregate.Reduce(new MeetupRsvpDeclinedEvent(meetupId, bill));
 
             aggregate.MembersGoing.AssertEqual(joe, susan, carla);

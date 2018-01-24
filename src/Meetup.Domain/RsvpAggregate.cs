@@ -66,26 +66,21 @@ namespace Meetup.Domain
 
         private static RsvpAggregate Reduce(RsvpAggregate state, MeetupNumberOfSpotsChangedEvent @event)
         {
-            var diff = @event.NumberOfSpots - state.NumberOfSpots; 
-
-            if (diff > 0)
+            var numberOfSpotsDiff = @event.NumberOfSpots - state.NumberOfSpots; 
+            if (numberOfSpotsDiff > 0)
             {
-                var membersWaiting = state.MembersWaiting.Take(diff);
+                var membersWaiting = state.MembersWaiting.Take(numberOfSpotsDiff);
                 state.MembersGoing.AddRange(membersWaiting);
-
-                var membersWaitingCount = state.MembersWaiting.Count;
-                state.MembersWaiting.RemoveRange(membersWaitingCount - diff, diff); 
+                state.MembersWaiting.RemoveRange(membersWaiting);
             }
             else
             {
-                var takeLast = Math.Abs(diff);
-                var membersGoing = state.MembersGoing.TakeLast(takeLast);
+                var membersGoing = state.MembersGoing.TakeLast(Math.Abs(numberOfSpotsDiff));
                 state.MembersWaiting.InsertRange(0, membersGoing);
-                
-                var membersGoingCount = state.MembersGoing.Count;
-                state.MembersGoing.RemoveRange(membersGoingCount - takeLast, takeLast);
+                state.MembersGoing.RemoveRange(membersGoing);
             }
 
+            state.NumberOfSpots = @event.NumberOfSpots;
             return state;
         }
 
@@ -95,33 +90,29 @@ namespace Meetup.Domain
         private static RsvpAggregate Reduce(RsvpAggregate state, MeetupRsvpDeclinedEvent @event)
         {
             var memberId = @event.MemberId;
-            state.MembersNotGoing.Add(memberId);
+            state.MembersNotGoing.TryAdd(memberId);
             state.MembersGoing.Remove(memberId);
             state.MembersWaiting.Remove(memberId);
             
             if (AvailableSpots(state) && state.MembersWaiting.Any())
             {
                 var firstMemberWaiting = state.MembersWaiting.First();
-                state.MembersGoing.Add(firstMemberWaiting);
+                state.MembersGoing.TryAdd(firstMemberWaiting);
                 state.MembersWaiting.Remove(firstMemberWaiting);
             }
-            
             return state;
         }
         
         private static RsvpAggregate Reduce(RsvpAggregate state, MeetupRsvpAcceptedEvent @event)
         {
             var memberId = @event.MemberId;
-            if (!state.MembersGoing.Contains(memberId))
+            if (AvailableSpots(state))
             {
-                if (AvailableSpots(state))
-                {
-                    state.MembersGoing.Add(memberId);
-                } 
-                else
-                {
-                    state.MembersWaiting.Add(memberId);
-                }
+                state.MembersGoing.TryAdd(memberId);
+            } 
+            else
+            {
+                state.MembersWaiting.TryAdd(memberId);
             }
             return state;
         }
@@ -131,6 +122,25 @@ namespace Meetup.Domain
     {
         public static RsvpAggregate Reduce(this RsvpAggregate aggregate, object @event) =>
             RsvpAggregate.Reduce(aggregate, @event);
+
+        public static List<T> TryAdd<T>(this List<T> source, T item)
+        {
+            if (!source.Contains(item))
+            {
+                source.Add(item);
+            }
+
+            return source;
+        }
+
+        public static List<T> RemoveRange<T>(this List<T> source, IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+               source.Remove(item);
+            }
+            return source;
+        }
 
         public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int N) => 
             source.Skip(Math.Max(0, source.Count() - N));
