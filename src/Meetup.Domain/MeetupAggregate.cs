@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Meetup.Domain.Commands;
 using Meetup.Domain.Events;
 
 namespace Meetup.Domain
@@ -8,14 +9,14 @@ namespace Meetup.Domain
     {
         private List<object> _pendingEvents = new List<object>();
         
-        private MeetupState _state = MeetupState.Empty;
+        public MeetupState State { get; private set; } = MeetupState.Empty;
 
         public Guid MeetupId { get; }
 
         public MeetupAggregate(Guid meetupId) => MeetupId = meetupId;
 
-        public void Publish() => 
-            TryRaiseEvent(new MeetupRsvpOpenedEvent(MeetupId));
+        public void Publish(MeetupPublishCommand command) => 
+            TryRaiseEvent(new MeetupRsvpOpenedEvent(MeetupId, command.NumberOfSpots));
 
         public void AcceptRsvp(Guid memberId) => 
             TryRaiseEvent(new MeetupRsvpAcceptedEvent(MeetupId, memberId));
@@ -40,13 +41,13 @@ namespace Meetup.Domain
             switch(@event)
             {
                 case MeetupRsvpOpenedEvent opened:
-                    _state = MeetupState.Published;
+                    State = MeetupState.Published;
                     break;
                 case MeetupCanceledEvent canceled:
-                    _state = MeetupState.Cancelled;
+                    State = MeetupState.Cancelled;
                     break;
                 case MeetupRsvpClosedEvent closed:
-                    _state = MeetupState.Closed;
+                    State = MeetupState.Closed;
                     break;
             }            
         }
@@ -57,7 +58,7 @@ namespace Meetup.Domain
 
         private void TryRaiseEvent(object @event) 
         {
-            if (@event != null && _state.CanRaiseEvent(@event.GetType()))
+            if (@event != null && State.CanRaiseEvent(@event.GetType()))
             {
                 _pendingEvents.Add(@event);
                 Apply(@event);
