@@ -183,6 +183,103 @@ namespace Meetup.Domain.Tests
             aggregate.MembersNotGoing.AssertEqual(bill);
             aggregate.MembersWaiting.AssertEqual();
         }
+
+        [Fact]
+        public void Given_MeetupEvents_When_Reduce_With_MembersWaiting_RsvpDeclined_Then_ExpectedRsvpAggregate()
+        {
+            Guid meetupId = Guid.NewGuid(), bill = Guid.NewGuid(), joe = Guid.NewGuid(), susan = Guid.NewGuid(), carla = Guid.NewGuid();
+
+            var aggregate = RsvpAggregate
+                .WithNumberOfSpots(3)
+                .WithMembersGoing(bill, joe, susan)
+                .WithMembersWaiting(carla);
+                
+            // reduce twice for testing idempotency
+            aggregate= aggregate.Reduce(new MeetupRsvpDeclinedEvent(meetupId, bill));
+            aggregate= aggregate.Reduce(new MeetupRsvpDeclinedEvent(meetupId, bill));
+
+            aggregate.MembersGoing.AssertEqual(joe, susan, carla);
+            aggregate.MembersNotGoing.AssertEqual(bill);
+            aggregate.MembersWaiting.AssertEqual();
+        }
+
+        [Fact]
+        public void Given_MeetupEvents_When_Reduce_With_MemberFromWaiting_RsvpDeclined_Then_ExpectedRsvpAggregate()
+        {
+            Guid meetupId = Guid.NewGuid(), bill = Guid.NewGuid(), joe = Guid.NewGuid(), susan = Guid.NewGuid(), carla = Guid.NewGuid();
+
+            var aggregate = RsvpAggregate
+                .WithNumberOfSpots(3)
+                .WithMembersGoing(bill, joe, susan)
+                .WithMembersWaiting(carla);
+                
+            // reduce twice for testing idempotency
+            aggregate= aggregate.Reduce(new MeetupRsvpDeclinedEvent(meetupId, carla));
+            aggregate= aggregate.Reduce(new MeetupRsvpDeclinedEvent(meetupId, carla));
+
+            aggregate.MembersGoing.AssertEqual(bill, joe, susan);
+            aggregate.MembersNotGoing.AssertEqual(carla);
+            aggregate.MembersWaiting.AssertEqual();
+        }
+
+        [Fact]
+        public void Given_MeetupEvents_When_Reduce_With_Not_AvailableSpots_RsvpAccepted_Then_ExpectedRsvpAggregate()
+        {
+            Guid meetupId = Guid.NewGuid(), bill = Guid.NewGuid(), joe = Guid.NewGuid(), susan = Guid.NewGuid(), carla = Guid.NewGuid();
+
+            var aggregate = RsvpAggregate
+                .WithNumberOfSpots(2)
+                .WithMembersGoing(bill, joe)
+                .WithMembersWaiting(carla);
+                
+            // reduce twice for testing idempotency
+            aggregate= aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, susan));
+            aggregate= aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, susan));
+
+            aggregate.MembersGoing.AssertEqual(bill, joe);
+            aggregate.MembersWaiting.AssertEqual(carla, susan);
+            aggregate.MembersNotGoing.AssertEqual();
+        }
+
+        [Fact]
+        public void Given_MeetupEvents_When_Reduce_With_AvailableSpots_RsvpAccepted_Then_ExpectedRsvpAggregate()
+        {
+            Guid meetupId = Guid.NewGuid(), bill = Guid.NewGuid(), joe = Guid.NewGuid(), susan = Guid.NewGuid(), carla = Guid.NewGuid();
+
+            var aggregate = RsvpAggregate
+                .WithNumberOfSpots(3)
+                .WithMembersGoing(bill, joe)
+                .WithMembersWaiting()
+                .WithMembersNotGoing(carla);
+                
+            // reduce twice for testing idempotency
+            aggregate= aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, susan));
+            aggregate= aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, susan));
+
+            aggregate.MembersGoing.AssertEqual(bill, joe, susan);
+            aggregate.MembersNotGoing.AssertEqual(carla);
+            aggregate.MembersWaiting.AssertEqual();
+        }
+
+        [Fact]
+        public void Given_MeetupEvents_When_Reduce_With_AvailableSpots_From_NotGoingMembers_RsvpAccepted_Then_ExpectedRsvpAggregate()
+        {
+            Guid meetupId = Guid.NewGuid(), bill = Guid.NewGuid(), joe = Guid.NewGuid(), susan = Guid.NewGuid(), carla = Guid.NewGuid();
+
+            var aggregate = RsvpAggregate
+                .WithNumberOfSpots(3)
+                .WithMembersGoing(bill, joe, susan)
+                .WithMembersWaiting()
+                .WithMembersNotGoing(carla);
+                
+            // reduce twice for testing idempotency
+            aggregate= aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, carla));
+            aggregate= aggregate.Reduce(new MeetupRsvpAcceptedEvent(meetupId, carla));
+
+            aggregate.MembersGoing.AssertEqual(bill, joe, susan);
+            aggregate.MembersNotGoing.AssertEqual();
+            aggregate.MembersWaiting.AssertEqual(carla);
+        }
     }
 
     public static class RsvpAggregateTestsExtensions

@@ -90,14 +90,14 @@ namespace Meetup.Domain
         private static RsvpAggregate Reduce(RsvpAggregate state, MeetupRsvpDeclinedEvent @event)
         {
             var memberId = @event.MemberId;
-            state.MembersNotGoing.TryAdd(memberId);
             state.MembersGoing.Remove(memberId);
             state.MembersWaiting.Remove(memberId);
+            state.MembersNotGoing.TryAdd(memberId);
             
             if (AvailableSpots(state) && state.MembersWaiting.Any())
             {
                 var firstMemberWaiting = state.MembersWaiting.First();
-                state.MembersGoing.TryAdd(firstMemberWaiting);
+                state.MembersGoing.Add(firstMemberWaiting);
                 state.MembersWaiting.Remove(firstMemberWaiting);
             }
             return state;
@@ -106,14 +106,19 @@ namespace Meetup.Domain
         private static RsvpAggregate Reduce(RsvpAggregate state, MeetupRsvpAcceptedEvent @event)
         {
             var memberId = @event.MemberId;
+            state.MembersGoing.Remove(memberId);
+            state.MembersNotGoing.Remove(memberId);
+            state.MembersWaiting.Remove(memberId);
+
             if (AvailableSpots(state))
             {
-                state.MembersGoing.TryAdd(memberId);
+                state.MembersGoing.Add(memberId);
             } 
             else
             {
-                state.MembersWaiting.TryAdd(memberId);
+                state.MembersWaiting.Add(memberId);
             }
+
             return state;
         }
     }
