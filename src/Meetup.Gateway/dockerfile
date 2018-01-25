@@ -1,0 +1,14 @@
+FROM node:carbon
+ARG gateway
+
+COPY ${gateway}/package*.json ${gateway}/
+
+RUN npm install
+# If you are building your code for production
+
+# RUN npm install --only=production
+# Bundle app source
+COPY ${gateway} ${gateway}
+
+WORKDIR ${gateway}
+CMD [ "npm", "start" ]

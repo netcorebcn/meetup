@@ -1,0 +1,12 @@
+version: '3.3'
+
+services:
+  gateway:
+    image: gateway
+    build:
+      context: .
+      dockerfile: ${GATEWAY}/Dockerfile
+      args:
+        gateway: ${GATEWAY}
+    ports:
+      - 80:10010
