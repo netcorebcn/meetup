@@ -1,14 +1,14 @@
-FROM node:carbon
+FROM node:latest
 ARG gateway
 
-COPY ${gateway}/package*.json ${gateway}/
+WORKDIR ${gateway}
+COPY ${gateway}/package*.json ./
 
 RUN npm install
 # If you are building your code for production
 
 # RUN npm install --only=production
 # Bundle app source
-COPY ${gateway} ${gateway}
-
-WORKDIR ${gateway}
+COPY ${gateway} ./
 CMD [ "npm", "start" ]
+EXPOSE 8000

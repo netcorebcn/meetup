@@ -1,22 +1,29 @@
 {
-  "name": "Meetup.Gateway",
+  "name": "meetup.gateway",
   "version": "0.0.1",
-  "private": true,
-  "description": "New Swagger API Project",
-  "keywords": [],
-  "author": "",
-  "license": "",
+  "description": "Gateway for meetup app",
   "main": "app.js",
-  "dependencies": {
-    "hapi": "^10.0.0",
-    "swagger-hapi": "^0.1.0"
-  },
-  "devDependencies": {
-    "should": "^7.1.0",
-    "supertest": "^1.0.0"
-  },
   "scripts": {
     "start": "node app.js",
-    "test": "swagger project test"
+    "test": "test-gateway"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/netcorebcn/meetup.git"
+  },
+  "keywords": [
+    "meetup",
+    "gateway"
+  ],
+  "author": ".Net core Barcelona",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/netcorebcn/meetup/issues"
+  },
+  "homepage": "https://github.com/netcorebcn/meetup#readme",
+  "dependencies": {
+    "hapi": "^17.2.0",
+    "hapi-swaggered": "^3.0.2",
+    "hapi-swaggered-ui": "^3.0.1"
   }
 }

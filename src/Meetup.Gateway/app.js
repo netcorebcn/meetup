@@ -1,30 +1,73 @@
 'use strict';
 
-var SwaggerHapi = require('swagger-hapi');
 var Hapi = require('hapi');
-var app = new Hapi.Server();
 
-module.exports = app; // for testing
+const server = Hapi.server({
+  host: '0.0.0.0',
+  port: 8000
+});
 
-var config = {
-  appRoot: __dirname // required config
+// Add the route
+server.route({
+  method: 'GET',
+  path: '/hello',
+  options: {
+    tags: ['api'],
+    description: 'My route description',
+    notes: 'My route notes'
+  },
+  handler: function (request, h) {
+    return 'hello world';
+  }
+});
+
+server.route({
+  path: '/',
+  method: 'GET',
+  handler(request, h) {
+    return h.redirect('/docs');
+  }
+});
+
+
+
+// Start the server
+async function start() {
+  await server.register([
+    require('inert'),
+    require('vision'),
+    {
+      plugin: require('hapi-swaggered'),
+      options: {
+        tags: {
+          'foobar/test': 'Example foobar description'
+        },
+        info: {
+          title: 'Example API',
+          description: 'Powered by node, hapi, joi, hapi-swaggered, hapi-swaggered-ui and swagger-ui',
+          version: '1.0'
+        }
+      }
+    },
+    {
+      plugin: require('hapi-swaggered-ui'),
+      options: {
+        title: 'Example API',
+        path: '/docs',
+        swaggerOptions: {} // see above
+      }
+    }
+  ])
+
+  try {
+    await server.start();
+  }
+  catch (err) {
+    console.log(err);
+    process.exit(1);
+  }
+
+  console.log('Server running at:', server.info.uri);
 };
 
-SwaggerHapi.create(config, function(err, swaggerHapi) {
-  if (err) { throw err; }
-
-  var port = process.env.PORT || 10010;
-  app.connection({ port: port });
-  app.address = function() {
-    return { port: port };
-  };
-
-  app.register(swaggerHapi.plugin, function(err) {
-    if (err) { return console.error('Failed to load plugin:', err); }
-    app.start(function() {
-      if (swaggerHapi.runner.swagger.paths['/hello']) {
-        console.log('try this:\ncurl http://127.0.0.1:' + port + '/hello?name=Scott');
-      }
-    });
-  });
-});
+start();
