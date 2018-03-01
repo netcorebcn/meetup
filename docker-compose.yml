@@ -9,4 +9,4 @@ services:
       args:
         gateway: ${GATEWAY}
     ports:
-      - 80:10010
+      - 80:8000
