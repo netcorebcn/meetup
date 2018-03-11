@@ -71,3 +71,4 @@ async function start() {
 };
 
 start();
+require('./messages-connection').StartRabbit();

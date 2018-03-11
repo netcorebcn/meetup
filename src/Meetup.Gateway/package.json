@@ -24,6 +24,8 @@
   "dependencies": {
     "hapi": "^17.2.0",
     "hapi-swaggered": "^3.0.2",
-    "hapi-swaggered-ui": "^3.0.1"
+    "hapi-swaggered-ui": "^3.0.1",
+    "polly-js": "^1.4.3",
+    "rabbit.js": "^0.4.4"
   }
 }

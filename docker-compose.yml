@@ -10,3 +10,11 @@ services:
         gateway: ${GATEWAY}
     ports:
       - 80:8000
+    environment:
+      - messagebroker=amqp://messagebroker
+
+  messagebroker:
+    image: rabbitmq:3.7.3-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
