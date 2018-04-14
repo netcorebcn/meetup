@@ -1,6 +1,7 @@
 'use strict';
 
 var Hapi = require('hapi');
+var messages = require('./messages-connection');
 
 const server = Hapi.server({
   host: '0.0.0.0',
@@ -9,12 +10,12 @@ const server = Hapi.server({
 
 // Add the route
 server.route({
-  method: 'GET',
-  path: '/hello',
+  method: 'POST',
+  path: '/meetup',
   options: {
     tags: ['api'],
-    description: 'My route description',
-    notes: 'My route notes'
+    description: 'Create a meetup',
+    notes: 'notes'
   },
   handler: function (request, h) {
     return 'hello world';
@@ -40,10 +41,10 @@ async function start() {
       plugin: require('hapi-swaggered'),
       options: {
         tags: {
-          'foobar/test': 'Example foobar description'
+          'api': 'Meetup operations'
         },
         info: {
-          title: 'Example API',
+          title: 'Meetup API',
           description: 'Powered by node, hapi, joi, hapi-swaggered, hapi-swaggered-ui and swagger-ui',
           version: '1.0'
         }
@@ -52,7 +53,7 @@ async function start() {
     {
       plugin: require('hapi-swaggered-ui'),
       options: {
-        title: 'Example API',
+        title: 'Meetup API',
         path: '/docs',
         swaggerOptions: {} // see above
       }
@@ -71,4 +72,4 @@ async function start() {
 };
 
 start();
-require('./messages-connection').StartRabbit();
+messages.StartRabbit();
