@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Meetup.Domain.Events;
 
 namespace Meetup.Domain
 {
@@ -9,7 +8,7 @@ namespace Meetup.Domain
     {
         private readonly Type[] _raisableEvents;
 
-        private MeetupState(string name, Type[] raisableEvents) : base(name) => 
+        private MeetupState(string name, Type[] raisableEvents) : base(name) =>
             _raisableEvents = raisableEvents;
 
         public bool CanRaiseEvent(Type @eventType) => _raisableEvents.Any(x => x == @eventType);
@@ -19,7 +18,7 @@ namespace Meetup.Domain
             nameof(Empty),
             raisableEvents: new Type[]
             {
-                typeof(MeetupRsvpOpenedEvent)
+                typeof(Events.MeetupRsvpOpened)
             }
         );
 
@@ -28,11 +27,11 @@ namespace Meetup.Domain
             nameof(Published),
             raisableEvents: new Type[]
             {
-                typeof(MeetupCanceledEvent),
-                typeof(MeetupRsvpClosedEvent),
-                typeof(MeetupRsvpAcceptedEvent),
-                typeof(MeetupRsvpDeclinedEvent),
-                typeof(MeetupNumberOfSpotsChangedEvent)
+                typeof(Events.MeetupCanceled),
+                typeof(Events.MeetupRsvpClosed),
+                typeof(Events.MeetupRsvpAccepted),
+                typeof(Events.MeetupRsvpDeclined),
+                typeof(Events.MeetupNumberOfSpotsChanged)
             }
         );
 
@@ -41,16 +40,16 @@ namespace Meetup.Domain
             nameof(Closed),
             raisableEvents: new Type[]
             {
-                typeof(MeetupCanceledEvent),
-                typeof(MeetupRsvpOpenedEvent),
-                typeof(MeetupMemberWentEvent)
+                typeof(Events.MeetupCanceled),
+                typeof(Events.MeetupRsvpOpened),
+                typeof(Events.MeetupMemberWent)
             }
         );
 
         public static readonly MeetupState Cancelled = new MeetupState
         (
             nameof(Cancelled),
-            raisableEvents: new Type[]{}
+            raisableEvents: new Type[] { }
         );
     }
 }

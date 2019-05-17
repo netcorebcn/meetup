@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Meetup.Domain.Events;
 
 namespace Meetup.Domain
 {
@@ -15,9 +14,9 @@ namespace Meetup.Domain
 
         public List<Guid> MembersWaiting { get; } = new List<Guid>();
 
-        private RsvpAggregate(List<Guid> membersGoing = null, 
-            List<Guid> membersNotGoing = null, 
-            List<Guid> membersWaiting = null, 
+        private RsvpAggregate(List<Guid> membersGoing = null,
+            List<Guid> membersNotGoing = null,
+            List<Guid> membersWaiting = null,
             int numberOfSpots = 0)
         {
             MembersGoing = membersGoing ?? new List<Guid>();
@@ -26,47 +25,47 @@ namespace Meetup.Domain
             NumberOfSpots = numberOfSpots;
         }
 
-        public static RsvpAggregate WithNumberOfSpots(int numberOfSpots) => 
+        public static RsvpAggregate WithNumberOfSpots(int numberOfSpots) =>
             new RsvpAggregate(numberOfSpots: numberOfSpots);
 
-        public RsvpAggregate WithMembersGoing(params Guid[] membersGoing) => 
+        public RsvpAggregate WithMembersGoing(params Guid[] membersGoing) =>
             new RsvpAggregate(membersGoing.ToList(), this.MembersNotGoing, this.MembersWaiting, this.NumberOfSpots);
 
-        public RsvpAggregate WithMembersNotGoing(params Guid[] membersNotGoing) => 
+        public RsvpAggregate WithMembersNotGoing(params Guid[] membersNotGoing) =>
             new RsvpAggregate(this.MembersGoing, membersNotGoing.ToList(), this.MembersWaiting, this.NumberOfSpots);
 
-        public RsvpAggregate WithMembersWaiting(params Guid[] membersWaiting) => 
+        public RsvpAggregate WithMembersWaiting(params Guid[] membersWaiting) =>
             new RsvpAggregate(this.MembersGoing, this.MembersNotGoing, membersWaiting.ToList(), this.NumberOfSpots);
 
-        public static RsvpAggregate Create(params object[] events) => 
+        public static RsvpAggregate Create(params object[] events) =>
             events.Aggregate(new RsvpAggregate(), Reduce);
 
         public static RsvpAggregate Reduce(RsvpAggregate state, object @event)
         {
             switch (@event)
             {
-                case MeetupRsvpOpenedEvent rsvpOpened:
+                case Events.MeetupRsvpOpened rsvpOpened:
                     state.NumberOfSpots = rsvpOpened.NumberOfSpots;
                     break;
 
-                case MeetupRsvpAcceptedEvent rsvpAccepted:
+                case Events.MeetupRsvpAccepted rsvpAccepted:
                     state = Reduce(state, rsvpAccepted);
                     break;
 
-                case MeetupRsvpDeclinedEvent rsvpDeclined:
+                case Events.MeetupRsvpDeclined rsvpDeclined:
                     state = Reduce(state, rsvpDeclined);
                     break;
 
-                case MeetupNumberOfSpotsChangedEvent spotsChanged:
+                case Events.MeetupNumberOfSpotsChanged spotsChanged:
                     state = Reduce(state, spotsChanged);
                     break;
             }
             return state;
         }
 
-        private static RsvpAggregate Reduce(RsvpAggregate state, MeetupNumberOfSpotsChangedEvent @event)
+        private static RsvpAggregate Reduce(RsvpAggregate state, Events.MeetupNumberOfSpotsChanged @event)
         {
-            var numberOfSpotsDiff = @event.NumberOfSpots - state.NumberOfSpots; 
+            var numberOfSpotsDiff = @event.NumberOfSpots - state.NumberOfSpots;
             if (numberOfSpotsDiff > 0)
             {
                 var membersWaiting = state.MembersWaiting.Take(numberOfSpotsDiff);
@@ -87,13 +86,13 @@ namespace Meetup.Domain
         private static bool AvailableSpots(RsvpAggregate state) =>
             state.NumberOfSpots > state.MembersGoing.Count;
 
-        private static RsvpAggregate Reduce(RsvpAggregate state, MeetupRsvpDeclinedEvent @event)
+        private static RsvpAggregate Reduce(RsvpAggregate state, Events.MeetupRsvpDeclined @event)
         {
             var memberId = @event.MemberId;
             state.MembersGoing.Remove(memberId);
             state.MembersWaiting.Remove(memberId);
             state.MembersNotGoing.TryAdd(memberId);
-            
+
             if (AvailableSpots(state) && state.MembersWaiting.Any())
             {
                 var firstMemberWaiting = state.MembersWaiting.First();
@@ -102,8 +101,8 @@ namespace Meetup.Domain
             }
             return state;
         }
-        
-        private static RsvpAggregate Reduce(RsvpAggregate state, MeetupRsvpAcceptedEvent @event)
+
+        private static RsvpAggregate Reduce(RsvpAggregate state, Events.MeetupRsvpAccepted @event)
         {
             var memberId = @event.MemberId;
             state.MembersGoing.Remove(memberId);
@@ -113,7 +112,7 @@ namespace Meetup.Domain
             if (AvailableSpots(state))
             {
                 state.MembersGoing.Add(memberId);
-            } 
+            }
             else
             {
                 state.MembersWaiting.Add(memberId);
@@ -142,12 +141,12 @@ namespace Meetup.Domain
         {
             foreach (var item in items)
             {
-               source.Remove(item);
+                source.Remove(item);
             }
             return source;
         }
 
-        public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int N) => 
+        public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int N) =>
             source.Skip(Math.Max(0, source.Count() - N));
     }
 }

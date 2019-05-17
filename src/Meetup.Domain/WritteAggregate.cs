@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Meetup.Domain.Events;
 
 namespace Meetup.Domain
 {
@@ -18,14 +17,14 @@ namespace Meetup.Domain
         {
             switch (@event)
             {
-                case MeetupRsvpOpenedEvent created:
+                case Events.MeetupRsvpOpened created:
                     aggregate.State = MeetupState.Published;
                     aggregate.NumberOfSpots = created.NumberOfSpots;
                     break;
-                case MeetupRsvpAcceptedEvent accepted:
+                case Events.MeetupRsvpAccepted accepted:
                     aggregate.RSPV.Add(accepted.MemberId);
                     break;
-                case MeetupRsvpDeclinedEvent declined:
+                case Events.MeetupRsvpDeclined declined:
                     aggregate.RSPV.Remove(declined.MemberId);
                     break;
             }
