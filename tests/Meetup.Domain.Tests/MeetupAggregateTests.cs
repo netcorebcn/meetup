@@ -3,7 +3,6 @@ using Xunit;
 using Meetup.Domain;
 using System.Linq;
 using System.Collections.Generic;
-using Meetup.Domain.Commands;
 
 namespace Meetup.Domain.Tests
 {
@@ -12,7 +11,7 @@ namespace Meetup.Domain.Tests
         [Fact]
         public void Given_NewMeetup_When_Publish_Then_RSVPOpened() =>
             ExecuteCommand(meetup =>
-                meetup.Publish(new MeetupPublishCommand(Guid.NewGuid(), numberOfSpots: 4)))
+                meetup.Publish(numberOfSpots: 4))
                 .GetPendingEvents()
                 .AssertLastEventOfType<Events.MeetupRsvpOpened>()
                 .WithTotalCount(1);
@@ -21,7 +20,7 @@ namespace Meetup.Domain.Tests
         public void Given_Published_Meetup_When_Cancel_Then_Canceled() =>
             ExecuteCommand(meetup =>
             {
-                meetup.Publish(new MeetupPublishCommand(Guid.NewGuid(), numberOfSpots: 4));
+                meetup.Publish(numberOfSpots: 4);
                 meetup.Cancel();
             })
             .GetPendingEvents()
@@ -33,9 +32,9 @@ namespace Meetup.Domain.Tests
             ExecuteCommand(meetup =>
             {
                 var meetupId = Guid.NewGuid();
-                meetup.Publish(new MeetupPublishCommand(meetupId, numberOfSpots: 4));
+                meetup.Publish(numberOfSpots: 4);
                 meetup.Cancel();
-                meetup.Publish(new MeetupPublishCommand(meetupId, numberOfSpots: 4));
+                meetup.Publish(numberOfSpots: 4);
             })
             .GetPendingEvents()
             .AssertLastEventOfType<Events.MeetupCanceled>()
@@ -45,7 +44,7 @@ namespace Meetup.Domain.Tests
         public void Given_OpenedMeetup_When_AcceptingRsvp_Then_RsvpAccepted() =>
             ExecuteCommand(meetup =>
             {
-                meetup.Publish(new MeetupPublishCommand(Guid.NewGuid(), numberOfSpots: 4));
+                meetup.Publish(numberOfSpots: 4);
                 meetup.DeclineRsvp(Guid.NewGuid());
                 meetup.AcceptRsvp(Guid.NewGuid());
             })
@@ -57,7 +56,7 @@ namespace Meetup.Domain.Tests
         public void Given_ClosedMeetup_When_AcceptRsvp_Then_NotAccepted() =>
             ExecuteCommand(meetup =>
             {
-                meetup.Publish(new MeetupPublishCommand(Guid.NewGuid(), numberOfSpots: 4));
+                meetup.Publish(numberOfSpots: 4);
                 meetup.Close();
                 meetup.AcceptRsvp(Guid.NewGuid());
                 meetup.DeclineRsvp(Guid.NewGuid());
@@ -70,7 +69,7 @@ namespace Meetup.Domain.Tests
         public void Given_ClosedMeetup_When_TakeAttendance_Then_MemberWent() =>
             ExecuteCommand(meetup =>
             {
-                meetup.Publish(new MeetupPublishCommand(Guid.NewGuid(), numberOfSpots: 4));
+                meetup.Publish(numberOfSpots: 4);
                 meetup.Close();
                 meetup.TakeAttendance(Guid.NewGuid());
             })

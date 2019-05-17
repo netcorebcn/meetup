@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Meetup.Domain.Commands;
 
 namespace Meetup.Domain
 {
@@ -14,8 +13,8 @@ namespace Meetup.Domain
 
         public MeetupAggregate(Guid id) => Id = id;
 
-        public void Publish(MeetupPublishCommand command) =>
-            TryRaiseEvent(new Events.MeetupRsvpOpened(Id, command.NumberOfSpots));
+        public void Publish(int numberOfSpots) =>
+            TryRaiseEvent(new Events.MeetupRsvpOpened(Id, numberOfSpots));
 
         public void AcceptRsvp(Guid memberId) =>
             TryRaiseEvent(new Events.MeetupRsvpAccepted(Id, memberId));
