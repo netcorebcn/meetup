@@ -12,25 +12,19 @@ namespace Meetup.Domain
             Value = number;
         }
 
+        public static SeatsNumber None => From(1);
         public static SeatsNumber From(int number) => new SeatsNumber(number);
 
-        public bool Equals(SeatsNumber other)
-        {
-            return this.Value == other.Value;
-        }
+        public bool Equals(SeatsNumber other) => this.Value == other.Value;
 
-        public override bool Equals(object other)
-        {
-            return this.Value == ((SeatsNumber)other).Value;
-        }
+        public override bool Equals(object other) => this.Value == ((SeatsNumber)other).Value;
 
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
+        public override int GetHashCode() => Value.GetHashCode();
 
         public static bool operator ==(SeatsNumber left, SeatsNumber right) => Equals(left, right);
 
         public static bool operator !=(SeatsNumber left, SeatsNumber right) => !Equals(left, right);
+
+        public static implicit operator int(SeatsNumber number) => number.Value;
     }
 }

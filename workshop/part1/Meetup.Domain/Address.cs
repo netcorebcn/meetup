@@ -5,6 +5,7 @@ namespace Meetup.Domain
     public class Address
     {
         public string Value { get; }
+        public static Address None => From("none");
 
         private Address(string address)
         {

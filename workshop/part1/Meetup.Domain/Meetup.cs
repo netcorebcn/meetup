@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+#nullable enable
 namespace Meetup.Domain
 {
     public class Meetup
@@ -11,15 +12,22 @@ namespace Meetup.Domain
         public SeatsNumber NumberOfSeats { get; private set; }
         public DateTimeRange TimeRange { get; private set; }
 
-        public Meetup(MeetupId id, MeetupTitle title, Address location, SeatsNumber numberOfSeats, DateTimeRange timeRange)
+        public Meetup(MeetupId id, MeetupTitle title)
         {
             Id = id;
             Title = title;
-            Location = location;
-            NumberOfSeats = numberOfSeats;
-            TimeRange = timeRange;
+            Location = Address.None;
+            NumberOfSeats = SeatsNumber.None;
+            TimeRange = DateTimeRange.None;
         }
 
-        public void ChangeNumberOfSeats(SeatsNumber number) => NumberOfSeats = number;
+        public void UpdateNumberOfSeats(SeatsNumber number) => NumberOfSeats = number;
+        public void UpdateLocation(Address location) => Location = location;
+        public void UpdateTime(DateTimeRange timeRange) => TimeRange = timeRange;
+        public void UpdateTitle(MeetupTitle title) => Title = title;
+
+        public void Publish()
+        {
+        }
     }
 }
