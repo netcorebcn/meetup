@@ -2,7 +2,7 @@ using System;
 
 namespace Meetup.Domain
 {
-    public class Address
+    public class Address : IEquatable<Address>
     {
         public string Value { get; }
         public static Address None => From("none");
@@ -14,6 +14,15 @@ namespace Meetup.Domain
         }
 
         public static Address From(string address) => new Address(address);
+
+        public bool Equals(Address other) => this.Value == other.Value;
+
+        public override bool Equals(object other) => this.Value == ((Address)other).Value;
+
+        public override int GetHashCode() => Value.GetHashCode();
+        public static bool operator ==(Address left, Address right) => Equals(left, right);
+        public static bool operator !=(Address left, Address right) => !Equals(left, right);
+
         public static implicit operator string(Address text) => text.Value;
     }
 }

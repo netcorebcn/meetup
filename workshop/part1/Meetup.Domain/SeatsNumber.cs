@@ -20,11 +20,8 @@ namespace Meetup.Domain
         public override bool Equals(object other) => this.Value == ((SeatsNumber)other).Value;
 
         public override int GetHashCode() => Value.GetHashCode();
-
         public static bool operator ==(SeatsNumber left, SeatsNumber right) => Equals(left, right);
-
         public static bool operator !=(SeatsNumber left, SeatsNumber right) => !Equals(left, right);
-
         public static implicit operator int(SeatsNumber number) => number.Value;
     }
 }

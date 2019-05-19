@@ -20,20 +20,15 @@ namespace Meetup.Domain
         {
             if (start == default) throw new ArgumentException("start date must be valid", nameof(start));
             if (start >= end) throw new ArgumentException("start date must be before end date", nameof(start));
-
             return new DateTimeRange(start, end);
         }
 
         public static DateTimeRange From(string date, string time, int durationInHours)
         {
             var pattern = "yyyy-MM-dd HH:mm";
-            if (DateTime.TryParseExact($"{date} {time}", pattern, null,
-                                   DateTimeStyles.None, out DateTime start))
-            {
-                return new DateTimeRange(start, start.AddHours(durationInHours));
-            }
-
-            throw new ArgumentException($"date and time must be in {pattern} format");
+            return (DateTime.TryParseExact($"{date} {time}", pattern, null, DateTimeStyles.None, out DateTime start))
+                ? new DateTimeRange(start, start.AddHours(durationInHours))
+                : throw new ArgumentException($"date and time must be in {pattern} format");
         }
 
         public bool Equals(DateTimeRange other) => Start == other.Start && End == other.End;
