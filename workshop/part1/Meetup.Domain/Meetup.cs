@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 #nullable enable
 namespace Meetup.Domain
@@ -49,30 +50,36 @@ namespace Meetup.Domain
 
         public void Publish()
         {
+            var previous = State;
             State = MeetupState.Published;
-            EnsureInvariants();
+            EnsureInvariants(previous);
         }
 
         public void Cancel()
         {
+            var previous = State;
             State = MeetupState.Canceled;
-            EnsureInvariants();
+            EnsureInvariants(previous);
         }
 
         public void Close()
         {
+            var previous = State;
             State = MeetupState.Closed;
-            EnsureInvariants();
+            Console.WriteLine($"MeetupState previous {previous}, Current {State}");
+            EnsureInvariants(previous);
         }
 
-        private void EnsureInvariants()
+        private void EnsureInvariants() => EnsureInvariants(State);
+
+        private void EnsureInvariants(MeetupState previous)
         {
-            var valid = Id != null && Title != MeetupTitle.None &&
+            var valid = Id != MeetupId.None && Title != MeetupTitle.None &&
             State switch
             {
-                MeetupState.Published => RequiredFields(),
-                MeetupState.Canceled => RequiredFields(),
-                MeetupState.Closed => RequiredFields(),
+                MeetupState.Published => RequiredFields(Published),
+                MeetupState.Canceled => RequiredFields(Canceled),
+                MeetupState.Closed => RequiredFields(Closed),
                 _ => true
             };
 
@@ -81,10 +88,15 @@ namespace Meetup.Domain
                 throw new MeetupDomainException($"Invalid state {State}");
             }
 
-            bool RequiredFields() =>
-                Location != Address.None
+            bool RequiredFields(Func<MeetupState[]> states) =>
+                states().Any(s => s == previous)
+                && Location != Address.None
                 && NumberOfSeats != SeatsNumber.None
                 && TimeRange != DateTimeRange.None;
+
+            MeetupState[] Published() => new[] { MeetupState.Published, MeetupState.Created };
+            MeetupState[] Canceled() => new[] { MeetupState.Canceled, MeetupState.Published };
+            MeetupState[] Closed() => new[] { MeetupState.Closed, MeetupState.Published };
         }
     }
 

@@ -2,7 +2,7 @@ using System;
 
 namespace Meetup.Domain
 {
-    public class MeetupTitle
+    public class MeetupTitle : IEquatable<MeetupTitle>
     {
         public string Value { get; }
 
@@ -14,6 +14,14 @@ namespace Meetup.Domain
         }
         public static MeetupTitle None => From(" ");
         public static MeetupTitle From(string title) => new MeetupTitle(title);
+
+        public bool Equals(MeetupTitle other) => Value == other.Value;
+
+        public override bool Equals(object other) => this.Value == ((MeetupTitle)other).Value;
+
+        public override int GetHashCode() => Value.GetHashCode();
+        public static bool operator ==(MeetupTitle left, MeetupTitle right) => Equals(left, right);
+        public static bool operator !=(MeetupTitle left, MeetupTitle right) => !Equals(left, right);
         public static implicit operator string(MeetupTitle text) => text.Value;
     }
 }

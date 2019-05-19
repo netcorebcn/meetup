@@ -55,34 +55,40 @@ namespace Meetup.Domain.Tests
         }
 
         [Fact]
-        public void Given_Created_Meetup_When_Cancel_Then_Throws()
-        {
-            var meetup = CreateMeetup();
-            Assert.Throws<MeetupDomainException>(() => meetup.Cancel());
-        }
+        public void Given_Created_Meetup_When_Cancel_Then_Throws() =>
+            Assert.Throws<MeetupDomainException>(() => CreateMeetup().Canceled());
 
         [Fact]
         public void Given_Published_Meetup_When_Close_Then_Closed()
         {
-            var meetup = CreateMeetup().Published();
-            meetup.Close();
+            var meetup = CreateMeetup().Published().Closed();
             Assert.Equal(MeetupState.Closed, meetup.State);
         }
 
         [Fact]
-        public void Given_Created_Meetup_When_Close_Then_Throws()
+        public void Given_Published_Meetup_When_Publish_Then_Nothing()
         {
-            var meetup = CreateMeetup();
-            Assert.Throws<MeetupDomainException>(() => meetup.Close());
+            var meetup = CreateMeetup().Published().Published();
+            Assert.Equal(MeetupState.Published, meetup.State);
         }
 
         [Fact]
-        public void Given_Closed_Meetup_When_Publish_Then_Published()
-        {
-            var meetup = CreateMeetup().Published().Closed();
-            meetup.Publish();
-            Assert.Equal(MeetupState.Published, meetup.State);
-        }
+        public void Given_Created_Meetup_When_Close_Then_Throws() =>
+            Assert.Throws<MeetupDomainException>(() => CreateMeetup().Closed());
+
+        [Fact]
+        public void Given_Closed_Meetup_When_Canceled_Then_Throws() =>
+            Assert.Throws<MeetupDomainException>(() => CreateMeetup()
+                .Published()
+                .Closed()
+                .Canceled());
+
+        [Fact]
+        public void Given_Canceled_Meetup_When_Close_Then_Throws() =>
+            Assert.Throws<MeetupDomainException>(() => CreateMeetup()
+                .Published()
+                .Canceled()
+                .Closed());
     }
 
     public static class MeetupTestExtensions
