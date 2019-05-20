@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 #nullable enable
@@ -14,6 +15,12 @@ namespace Meetup.Domain
         public DateTimeRange TimeRange { get; private set; }
         public MeetupState State { get; private set; }
 
+        private readonly List<MemberId> _membersGoing;
+        public ReadOnlyCollection<MemberId> MembersGoing => _membersGoing.AsReadOnly();
+        private readonly List<MemberId> _membersNotGoing;
+        public ReadOnlyCollection<MemberId> MembersNotGoing => _membersNotGoing.AsReadOnly();
+
+
         public Meetup(MeetupId id, MeetupTitle title)
         {
             Id = id;
@@ -22,6 +29,8 @@ namespace Meetup.Domain
             NumberOfSeats = SeatsNumber.None;
             TimeRange = DateTimeRange.None;
             State = MeetupState.Created;
+            _membersGoing = new List<MemberId>();
+            _membersNotGoing = new List<MemberId>();
             EnsureInvariants();
         }
 
@@ -68,6 +77,18 @@ namespace Meetup.Domain
             State = MeetupState.Closed;
             Console.WriteLine($"MeetupState previous {previous}, Current {State}");
             EnsureInvariants(previous);
+        }
+
+        public void AcceptRSVP(MemberId memberId)
+        {
+            _membersGoing.Add(memberId);
+            EnsureInvariants();
+        }
+
+        public void RejectRSVP(MemberId memberId)
+        {
+            _membersNotGoing.Add(memberId);
+            EnsureInvariants();
         }
 
         private void EnsureInvariants() => EnsureInvariants(State);

@@ -8,38 +8,60 @@ namespace Meetup.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ValuesController : ControllerBase
+    public class MeetupController : ControllerBase
     {
-        // GET api/values
-        [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        private readonly MeetupApplicationService _appService;
+
+        public MeetupController(MeetupApplicationService appService)
         {
-            return new string[] { "value1", "value2" };
+            _appService = appService;
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/values
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<ActionResult> Post(Meetups.V1.Create request)
         {
+            await _appService.Handle(request);
+            return Ok();
         }
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpPut]
+        [Route("title")]
+        public async Task<ActionResult> Put(Meetups.V1.UpdateNumberOfSeats request)
         {
+            await _appService.Handle(request);
+            return Ok();
         }
 
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpPut]
+        [Route("seats")]
+        public async Task<ActionResult> Put(Meetups.V1.UpdateTitle request)
         {
+            await _appService.Handle(request);
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("location")]
+        public async Task<ActionResult> Put(Meetups.V1.UpdateLocation request)
+        {
+            await _appService.Handle(request);
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("time")]
+        public async Task<ActionResult> Put(Meetups.V1.UpdateDateTime request)
+        {
+            await _appService.Handle(request);
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("publish")]
+        public async Task<ActionResult> Put(Meetups.V1.Publish request)
+        {
+            await _appService.Handle(request);
+            return Ok();
         }
     }
 }
