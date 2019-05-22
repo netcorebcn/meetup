@@ -9,6 +9,7 @@ namespace Meetup.Domain.Tests
 {
     public class MeetupTest
     {
+
         [Fact]
         public void Given_Created_Meetup_When_Create_Then_Created()
         {
@@ -92,33 +93,21 @@ namespace Meetup.Domain.Tests
                 .Closed());
 
         [Fact]
-        public void Given_Meetup_When_Create_Then_CreatedEvent()
-        {
-            var meetup = CreateMeetup();
-            Assert.IsType<Events.MeetupCreated>(meetup.Events.Last());
-        }
+        public void Given_Nothing_When_Create_Meetup_Then_Created() =>
+            GivenNothing<Events.MeetupCreated>(
+                CreateMeetup,
+                (m, ev) => Assert.Equal(MeetupState.Created, m.State));
 
         [Fact]
-        public void Given_Created_Meetup_When_Publish_Then_PublishedEvent()
-        {
-            var meetup = CreateMeetup().Published();
-            Assert.IsType<Events.MeetupPublished>(meetup.Events.Last());
-            if (meetup.Events.Last() is Events.MeetupPublished ev)
-            {
-                Assert.Equal(meetup.Id, ev.Id);
-            }
-        }
+        public void Given_Created_Meetup_When_Publish_Then_Published() =>
+            GivenPublishedMeetup<Events.MeetupPublished>(
+                (m, ev) => Assert.Equal(MeetupState.Published, m.State));
 
-        // [Fact]
-        // public void Given_Created_Meetup_When_Publish_Then_PublishedEvent()
-        // {
-        //     var meetup = CreateMeetup().Published();
-        //     Assert.IsType<Events.MeetupPublished>(meetup.Events.Last());
-        //     if (meetup.Events.Last() is Events.MeetupPublished ev)
-        //     {
-        //         Assert.Equal(meetup.Id, ev.Id);
-        //     }
-        // }
+        [Fact]
+        public void Given_Published_Meetup_When_UpdateSeats_Then_SeatsUpdated() =>
+            GivenPublishedMeetup<Events.MeetupNumberOfSeatsUpdated>(
+                m => m.UpdateNumberOfSeats(SeatsNumber.From(25)),
+                (m, ev) => Assert.Equal(m.NumberOfSeats, ev.NumberOfSeats));
     }
 
     public static class MeetupTestExtensions
@@ -129,6 +118,28 @@ namespace Meetup.Domain.Tests
         public readonly static int numberOfSeats = 50;
         public readonly static DateTimeRange timeRange = DateTimeRange.From(date: "2019-06-19", time: "19:00", durationInHours: 3);
 
+        public static void GivenPublishedMeetup<T>(Action<Meetup> cmd, Action<Meetup, T> assertEvent) =>
+            GivenMeetup(CreateMeetup().Published, cmd, assertEvent);
+        public static void GivenPublishedMeetup<T>(Action<Meetup, T> assertEvent) =>
+            GivenMeetup(CreateMeetup().Published, m => { }, assertEvent);
+
+        public static void GivenCreatedMeetup<T>(Action<Meetup> cmd, Action<Meetup, T> assertEvent) =>
+            GivenMeetup(CreateMeetup, cmd, assertEvent);
+
+        public static void GivenNothing<T>(Func<Meetup> initState, Action<Meetup, T> assertEvent) =>
+            GivenMeetup(initState, m => { }, assertEvent);
+
+        public static void GivenMeetup<T>(Func<Meetup> initState, Action<Meetup> cmd, Action<Meetup, T> assertEvent)
+        {
+            var meetup = initState();
+            cmd(meetup);
+
+            Assert.IsType<T>(meetup.Events.Last());
+            if (meetup.Events.Last() is T ev)
+            {
+                assertEvent(meetup, ev);
+            }
+        }
 
         public static Meetup CreateMeetup() => new Meetup(
             MeetupId.From(id),
