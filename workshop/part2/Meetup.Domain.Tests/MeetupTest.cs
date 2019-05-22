@@ -2,6 +2,7 @@ using System;
 using Xunit;
 using static Meetup.Domain.Tests.MeetupTestExtensions;
 using Meetup.Domain;
+using System.Linq;
 
 #nullable enable
 namespace Meetup.Domain.Tests
@@ -89,6 +90,35 @@ namespace Meetup.Domain.Tests
                 .Published()
                 .Canceled()
                 .Closed());
+
+        [Fact]
+        public void Given_Meetup_When_Create_Then_CreatedEvent()
+        {
+            var meetup = CreateMeetup();
+            Assert.IsType<Events.MeetupCreated>(meetup.Events.Last());
+        }
+
+        [Fact]
+        public void Given_Created_Meetup_When_Publish_Then_PublishedEvent()
+        {
+            var meetup = CreateMeetup().Published();
+            Assert.IsType<Events.MeetupPublished>(meetup.Events.Last());
+            if (meetup.Events.Last() is Events.MeetupPublished ev)
+            {
+                Assert.Equal(meetup.Id, ev.Id);
+            }
+        }
+
+        // [Fact]
+        // public void Given_Created_Meetup_When_Publish_Then_PublishedEvent()
+        // {
+        //     var meetup = CreateMeetup().Published();
+        //     Assert.IsType<Events.MeetupPublished>(meetup.Events.Last());
+        //     if (meetup.Events.Last() is Events.MeetupPublished ev)
+        //     {
+        //         Assert.Equal(meetup.Id, ev.Id);
+        //     }
+        // }
     }
 
     public static class MeetupTestExtensions
@@ -98,6 +128,7 @@ namespace Meetup.Domain.Tests
         public readonly static string address = "Skills Matters, London";
         public readonly static int numberOfSeats = 50;
         public readonly static DateTimeRange timeRange = DateTimeRange.From(date: "2019-06-19", time: "19:00", durationInHours: 3);
+
 
         public static Meetup CreateMeetup() => new Meetup(
             MeetupId.From(id),

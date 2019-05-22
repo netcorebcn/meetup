@@ -8,90 +8,79 @@ namespace Meetup.Domain
 {
     public class Meetup
     {
-        public MeetupId Id { get; }
-        public MeetupTitle Title { get; private set; }
-        public Address Location { get; private set; }
-        public SeatsNumber NumberOfSeats { get; private set; }
-        public DateTimeRange TimeRange { get; private set; }
-        public MeetupState State { get; private set; }
+        public MeetupId Id { get; private set; } = MeetupId.None;
+        public MeetupTitle Title { get; private set; } = MeetupTitle.None;
+        public Address Location { get; private set; } = Address.None;
+        public SeatsNumber NumberOfSeats { get; private set; } = SeatsNumber.None;
+        public DateTimeRange TimeRange { get; private set; } = DateTimeRange.None;
+        public MeetupState State { get; private set; } = MeetupState.Created;
+        private readonly List<object> _events = new List<object>();
+        public IEnumerable<object> Events => _events.AsEnumerable();
 
-        private readonly List<MemberId> _membersGoing;
-        public ReadOnlyCollection<MemberId> MembersGoing => _membersGoing.AsReadOnly();
-        private readonly List<MemberId> _membersNotGoing;
-        public ReadOnlyCollection<MemberId> MembersNotGoing => _membersNotGoing.AsReadOnly();
+        public Meetup(MeetupId id, MeetupTitle title) =>
+            Apply(new Events.MeetupCreated(id, title));
 
+        public void UpdateNumberOfSeats(SeatsNumber number) =>
+            Apply(new Events.MeetupNumberOfSeatsUpdated(Id, number));
 
-        public Meetup(MeetupId id, MeetupTitle title)
-        {
-            Id = id;
-            Title = title;
-            Location = Address.None;
-            NumberOfSeats = SeatsNumber.None;
-            TimeRange = DateTimeRange.None;
-            State = MeetupState.Created;
-            _membersGoing = new List<MemberId>();
-            _membersNotGoing = new List<MemberId>();
-            EnsureInvariants();
-        }
+        public void UpdateLocation(Address location) =>
+            Apply(new Events.MeetupLocationUpdated(Id, location));
 
-        public void UpdateNumberOfSeats(SeatsNumber number)
-        {
-            NumberOfSeats = number;
-            EnsureInvariants();
-        }
+        public void UpdateTime(DateTimeRange timeRange) =>
+            Apply(new Events.MeetupTimeUpdated(Id, timeRange.Start, timeRange.End));
 
-        public void UpdateLocation(Address location)
-        {
-            Location = location;
-            EnsureInvariants();
-        }
+        public void UpdateTitle(MeetupTitle title) =>
+            Apply(new Events.MeetupTitleUpdated(Id, title));
 
-        public void UpdateTime(DateTimeRange timeRange)
-        {
-            TimeRange = timeRange;
-            EnsureInvariants();
-        }
-        public void UpdateTitle(MeetupTitle title)
-        {
-            Title = title;
-            EnsureInvariants();
-        }
+        public void Publish() =>
+            Apply(new Events.MeetupPublished(Id));
 
-        public void Publish()
+        public void Cancel() =>
+            Apply(new Events.MeetupCanceled(Id));
+
+        public void Close() =>
+            Apply(new Events.MeetupClosed(Id));
+
+        private void Apply(object @event)
         {
             var previous = State;
-            State = MeetupState.Published;
+            When(@event);
             EnsureInvariants(previous);
+            _events.Add(@event);
         }
 
-        public void Cancel()
+        private void When(object @event)
         {
-            var previous = State;
-            State = MeetupState.Canceled;
-            EnsureInvariants(previous);
+            switch (@event)
+            {
+                case Events.MeetupCreated ev:
+                    Id = MeetupId.From(ev.Id);
+                    Title = MeetupTitle.From(ev.Title);
+                    State = MeetupState.Created;
+                    break;
+                case Events.MeetupPublished ev:
+                    State = MeetupState.Published;
+                    break;
+                case Events.MeetupCanceled ev:
+                    State = MeetupState.Canceled;
+                    break;
+                case Events.MeetupClosed ev:
+                    State = MeetupState.Closed;
+                    break;
+                case Events.MeetupNumberOfSeatsUpdated ev:
+                    NumberOfSeats = SeatsNumber.From(ev.NumberOfSeats);
+                    break;
+                case Events.MeetupTimeUpdated ev:
+                    TimeRange = DateTimeRange.From(ev.Start, ev.End);
+                    break;
+                case Events.MeetupTitleUpdated ev:
+                    Title = MeetupTitle.From(ev.Title);
+                    break;
+                case Events.MeetupLocationUpdated ev:
+                    Location = Address.From(ev.Location);
+                    break;
+            }
         }
-
-        public void Close()
-        {
-            var previous = State;
-            State = MeetupState.Closed;
-            Console.WriteLine($"MeetupState previous {previous}, Current {State}");
-            EnsureInvariants(previous);
-        }
-
-        public void AcceptRSVP(MemberId memberId)
-        {
-            _membersGoing.Add(memberId);
-            EnsureInvariants();
-        }
-
-        public void RejectRSVP(MemberId memberId)
-        {
-            _membersNotGoing.Add(memberId);
-            EnsureInvariants();
-        }
-
-        private void EnsureInvariants() => EnsureInvariants(State);
 
         private void EnsureInvariants(MeetupState previous)
         {

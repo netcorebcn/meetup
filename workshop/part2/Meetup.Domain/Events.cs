@@ -80,29 +80,5 @@ namespace Meetup.Domain
             public Guid Id { get; }
             public MeetupCanceled(Guid id) => Id = id;
         }
-
-        public class MeetupRsvpAccepted
-        {
-            public Guid Id { get; }
-            public Guid MemberId { get; }
-
-            public MeetupRsvpAccepted(Guid id, Guid memberId)
-            {
-                Id = id;
-                MemberId = memberId;
-            }
-        }
-
-        public class MeetupRsvpDeclined
-        {
-            public Guid Id { get; }
-            public Guid MemberId { get; }
-
-            public MeetupRsvpDeclined(Guid id, Guid memberId)
-            {
-                Id = id;
-                MemberId = memberId;
-            }
-        }
     }
 }
