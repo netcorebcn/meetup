@@ -12,10 +12,7 @@ namespace Meetup.Api.Controllers
     {
         private readonly MeetupApplicationService _appService;
 
-        public MeetupController(MeetupApplicationService appService)
-        {
-            _appService = appService;
-        }
+        public MeetupController(MeetupApplicationService appService) => _appService = appService;
 
         [HttpPost]
         public async Task<ActionResult> Post(Meetups.V1.Create request)

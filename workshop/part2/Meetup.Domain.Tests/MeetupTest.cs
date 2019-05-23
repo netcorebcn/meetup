@@ -9,7 +9,6 @@ namespace Meetup.Domain.Tests
 {
     public class MeetupTest
     {
-
         [Fact]
         public void Given_Created_Meetup_When_Create_Then_Created()
         {
@@ -108,6 +107,61 @@ namespace Meetup.Domain.Tests
             GivenPublishedMeetup<Events.MeetupNumberOfSeatsUpdated>(
                 m => m.UpdateNumberOfSeats(SeatsNumber.From(25)),
                 (m, ev) => Assert.Equal(m.NumberOfSeats, ev.NumberOfSeats));
+
+        [Fact]
+        public void Given_Valid_Created_Meetup_When_Build_Then_Built()
+        {
+            var meetup = new Meetup(
+                MeetupId.From(id),
+                MeetupTitle.From(title),
+                Address.None,
+                SeatsNumber.None,
+                DateTimeRange.None,
+                MeetupState.Created);
+
+            Assert.Equal(id, meetup.Id);
+            Assert.Equal(title, meetup.Title);
+            Assert.Equal(MeetupState.Created, meetup.State);
+        }
+
+        [Theory]
+        [InlineData(MeetupState.Created)]
+        [InlineData(MeetupState.Published)]
+        [InlineData(MeetupState.Canceled)]
+        [InlineData(MeetupState.Closed)]
+        public void Given_Valid_Meetup_When_Build_Then_Built(MeetupState state)
+        {
+            var meetup = new Meetup(
+                MeetupId.From(id),
+                MeetupTitle.From(title),
+                Address.From(address),
+                SeatsNumber.From(numberOfSeats),
+                timeRange,
+                state);
+
+            Assert.Equal(id, meetup.Id);
+            Assert.Equal(title, meetup.Title);
+            Assert.Equal(address, meetup.Location);
+            Assert.Equal(numberOfSeats, meetup.NumberOfSeats);
+            Assert.Equal(timeRange, meetup.TimeRange);
+            Assert.Equal(state, meetup.State);
+        }
+
+        [Theory]
+        [InlineData(MeetupState.Published)]
+        [InlineData(MeetupState.Canceled)]
+        [InlineData(MeetupState.Closed)]
+        public void Given_Invalid_Meetup_When_Build_Then_Throws(MeetupState state)
+        {
+            Assert.Throws<MeetupDomainException>(() =>
+            new Meetup(
+                MeetupId.From(id),
+                MeetupTitle.From(title),
+                Address.None,
+                SeatsNumber.From(numberOfSeats),
+                timeRange,
+                state));
+        }
     }
 
     public static class MeetupTestExtensions
@@ -144,6 +198,7 @@ namespace Meetup.Domain.Tests
         public static Meetup CreateMeetup() => new Meetup(
             MeetupId.From(id),
             MeetupTitle.From(title));
+
         public static Meetup AssertProperties(this Meetup @this)
         {
             Assert.Equal(id, @this.Id);

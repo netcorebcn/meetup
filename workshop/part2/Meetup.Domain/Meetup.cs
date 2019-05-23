@@ -17,6 +17,17 @@ namespace Meetup.Domain
         private readonly List<object> _events = new List<object>();
         public IEnumerable<object> Events => _events.AsEnumerable();
 
+        public Meetup(MeetupId id, MeetupTitle title, Address location, SeatsNumber numberOfSeats, DateTimeRange timeRange, MeetupState state)
+        {
+            Id = id;
+            Title = title;
+            Location = location;
+            NumberOfSeats = numberOfSeats;
+            TimeRange = timeRange;
+            State = state;
+            EnsureInvariants(State);
+        }
+
         public Meetup(MeetupId id, MeetupTitle title) =>
             Apply(new Events.MeetupCreated(id, title));
 

@@ -23,6 +23,7 @@ namespace Meetup.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddScoped<MeetupApplicationService>();
             services.AddControllers().AddNewtonsoftJson();
             services.AddSwaggerGen(c =>
             {

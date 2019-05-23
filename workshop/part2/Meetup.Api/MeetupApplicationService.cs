@@ -11,9 +11,9 @@ namespace Meetup.Api
 
         public MeetupApplicationService(IMeetupRepository repo) => _repo = repo;
 
-        public async Task Handle(object request)
+        public async Task Handle(object command)
         {
-            switch (request)
+            switch (command)
             {
                 case Meetups.V1.Create cmd:
                     var meetup = new Meetup.Domain.Meetup(MeetupId.From(cmd.Id), MeetupTitle.From(cmd.Title));
@@ -43,6 +43,10 @@ namespace Meetup.Api
                         cmd.Id,
                         meetup => meetup.UpdateTime(DateTimeRange.From(cmd.Start, cmd.End)));
                     break;
+
+                default:
+                    throw new InvalidOperationException(
+                        $"Command type {command.GetType().FullName} is unknown");
             }
 
             async Task ExecuteCommand(Guid id, Action<Meetup.Domain.Meetup> command)

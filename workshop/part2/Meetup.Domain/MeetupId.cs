@@ -18,6 +18,7 @@ namespace Meetup.Domain
         }
 
         public static implicit operator Guid(MeetupId text) => text.Value;
+        public static implicit operator string(MeetupId text) => text.Value.ToString();
 
         protected override IEnumerable<object> GetAtomicValues()
         {
