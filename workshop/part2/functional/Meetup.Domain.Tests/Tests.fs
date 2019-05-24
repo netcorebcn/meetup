@@ -1,57 +1,34 @@
-module Tests
+module Meetup.Domain.Tests
 
 open System
 open Xunit
-
-type MeetupId = MeetupId of Guid
-type MeetupTitle= MeetupTitle of string
-type NumberOfSeats = NumberOfSeats of int
-type Address = Address of string
-type DateTimeRange = DateTimeRange of DateTime * DateTime
-type MeetupState =
-    | Created
-    | Published
-    | Canceled
-    | Closed
-
-type Meetup = {
-    Id: MeetupId 
-    Title: MeetupTitle
-    NumberOfSeats: NumberOfSeats option
-    Time: DateTimeRange option
-    Location: Address option
-    State: MeetupState }
-
-let create meetupId title =
-    {
-        Id = MeetupId meetupId
-        Title = MeetupTitle title
-        Location = None
-        NumberOfSeats = None
-        Time = None
-        State = Created
-    }
-
-let publish location numberOfSeats startTime endTime meetup =
-    {
-        meetup with
-            Location = Some (Address location)
-            NumberOfSeats = Some (NumberOfSeats numberOfSeats)
-            Time = Some (DateTimeRange (startTime,endTime))
-            State = Published 
-    }
+open Meetup.Domain
 
 [<Fact>]
 let ``Given a meetup title when create then created`` () =
-    let id = Guid.NewGuid()
-    let meetup = create id "event sourcing" 
-    Assert.Equal(Created, meetup.State)
+    Guid.NewGuid() 
+    |> MeetupId.create 
+    |> Result.bind (
+        fun id -> 
+        "title"
+        |> MeetupTitle.create 
+        |> Result.map (fun title -> (id,title)))
+    |> Result.map (fun (id,title) -> Meetup.create id title)  
+    |> function
+        | Ok meetup -> 
+            Assert.True("title" = MeetupTitle.value meetup.Title)
+            Assert.True(MeetupState.Created = meetup.State) 
+        | Error _ -> Assert.True(true)
 
 [<Fact>]
-let ``Given created meetup when publish then published`` () =
-    let meetup = 
-        "event sourcing"
-        |> create (Guid.NewGuid())
-        |> publish "SanFrancisco, MountainView" 15 DateTime.UtcNow (DateTime.UtcNow.AddHours(2.0))
-
-    Assert.Equal(Published, meetup.State)
+let ``Given a meetup title when create then created with computation expression`` () =
+        result {
+            let! meetupId = Guid.NewGuid() |> MeetupId.create 
+            let! meetupTitle = "title" |> MeetupTitle.create 
+            return Meetup.create meetupId meetupTitle
+        } 
+        |> function
+        | Ok meetup -> 
+            Assert.True("title" = MeetupTitle.value meetup.Title)
+            Assert.True(MeetupState.Created = meetup.State) 
+        | Error _ -> Assert.True(true)
