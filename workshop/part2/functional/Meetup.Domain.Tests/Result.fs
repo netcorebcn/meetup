@@ -6,16 +6,11 @@ open System
 // Helpers for Result type and AsyncResult type
 //==============================================
 
-// F# VERSION DIFFERENCE
-// The "Result" type is built-in to F# 4.1 and newer (from VS2017),
-// so uncomment the Result type if you are using an older version of F#
-
-(*
-/// The Result type represents a choice between success and failure
-type Result<'success, 'failure> = 
-    | Ok of 'success
-    | Error of 'failure
-*)
+[<AutoOpen>]
+module ResultOperators =
+    // pipe a two-track value into a switch function 
+    let (>>=) x f = 
+        Result.bind f x   
 
 /// Functions for Result type (functor and monad).
 /// For applicatives, see Validation.

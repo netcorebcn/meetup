@@ -5,85 +5,39 @@ open System
 type MeetupId = MeetupId of Guid
 type NumberOfSeats = private NumberOfSeats of int
 type MeetupTitle= private MeetupTitle of string
-type Address = private Address of string
-type DateTimeRange = private DateTimeRange of DateTime * DateTime
-type MeetupState =
-    | Created
-    | Published
-    | Canceled
-    | Closed
+type Address = Address of string
+type DateTimeRange = DateTimeRange of DateTime * DateTime
 
-type Meetup = {
-    Id: MeetupId 
-    Title: MeetupTitle
-    NumberOfSeats: NumberOfSeats option
-    Time: DateTimeRange option
-    Location: Address option
-    State: MeetupState }
+type CreateData = {Id:MeetupId;Title:MeetupTitle}
+type PublishData = {NumberOfSeats:NumberOfSeats;Time:DateTimeRange;Location:Address}
+type MeetupData = {CreateData:CreateData;PublishData:PublishData}
 
-// let failOnError aResult =
-//     match aResult with
-//     | Ok success -> success 
-//     | Error error -> failwithf "%A" error
+type Meetup =
+    | Created of CreateData
+    | Published of MeetupData
+    | Canceled of MeetupData
+    | Closed of MeetupData
 
 module MeetupTitle =
-    let create =
-        let validate title=
-            if String.IsNullOrEmpty(title) then
-                Error "NumberOfSeats can not be negative"
-            else
-                Ok (MeetupTitle title)
+    let create = function
+        |title when String.IsNullOrEmpty(title) -> Error "NumberOfSeats can not be negative"
+        |title -> title |> MeetupTitle |> Ok        
 
-        // validate >> failOnError 
-        validate
-
-    let value (MeetupTitle title) = title 
-
-    let UseMeetupId (title:MeetupTitle):Result<String,String> =
-        title.ToString() + " append" |>  Ok
-
-    // first example
-    let temp = "test" |> create |> Result.bind UseMeetupId
-    
-        // pipe a two-track value into a switch function 
-    let (>>=) x f = 
-        Result.bind f x    
-
-    // With operator
-    let useId = "test" |> create >>= UseMeetupId
-
-    
+    let value (MeetupTitle title) = title     
 
 module MeetupId=
-    let create id=
-        if id= System.Guid.Empty  then
-            Error "Empty meetupId"
-        else
-            Ok (MeetupId id)
- 
-        // id |> validate |> failOnError
+    let create = function
+        | id when id=System.Guid.Empty -> Error "Empty meetupId"
+        | id -> id |> MeetupId |> Ok
         
 
-module Meetup=
-    let create meetupId title =
-         {
-            Id = meetupId
-            Title = title 
-            Location = None
-            NumberOfSeats = None
-            Time = None
-            State = Created
-        }
-
-    let publish location numberOfSeats startTime endTime meetup =
-        {
-            meetup with
-                Location = Some (Address location)
-                NumberOfSeats = Some (NumberOfSeats numberOfSeats)
-                Time = Some (DateTimeRange (startTime,endTime))
-                State = Published 
-        }
-
+module Meetup =
+    let publishMeetup publishData meetup =
+        match meetup with
+        | Created created-> {CreateData = created;PublishData = publishData} |> Published |> Ok
+        | Published _ -> Error "Already published"
+        | Canceled _ -> Error "Meetup is canceled"
+        | Closed _ -> Error "Meetup is closed"
 
 module NumberOfSeats =
     let create = function
@@ -91,4 +45,4 @@ module NumberOfSeats =
         | seats when seats > 1000 -> Error "NumberOfSeats can not be more than 1000"
         | seats -> seats |> NumberOfSeats |> Ok
     
-    let value (NumberOfSeats seats) = seats 
+    let value (NumberOfSeats seats) = seats

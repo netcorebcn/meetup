@@ -3,35 +3,35 @@ module Meetup.Domain.Tests
 open System
 open Xunit
 open Meetup.Domain
+open System
+open Meetup.Domain
+open System.Text.RegularExpressions
 
 [<Fact>]
-let ``Given a meetup title when create then created`` () =
-    Guid.NewGuid() 
-    |> MeetupId.create 
-    |> Result.bind (
-        fun id -> 
-        "title"
-        |> MeetupTitle.create 
-        |> Result.map (fun title -> (id,title)))
-    |> Result.map (fun (id,title) -> Meetup.create id title)  
-    |> function
-        | Ok meetup -> 
-            Assert.True("title" = MeetupTitle.value meetup.Title)
-            Assert.True(MeetupState.Created = meetup.State) 
-        | Error _ -> Assert.True(true)
+let ``Given a created meetup when try to publish should change to publish meetup`` () =
+    let createData = result{
+        let! id = Guid.NewGuid() |> MeetupId.create
+        let! title = "title" |> MeetupTitle.create
+        return {Id = id;Title = title}
+    }
 
-[<Fact>]
-let ``Given a meetup title when create then created with computation expression`` () =
-        result {
-            let! meetupId = Guid.NewGuid() |> MeetupId.create 
-            let! meetupTitle = "title" |> MeetupTitle.create 
-            return Meetup.create meetupId meetupTitle
-        } 
-        |> function
-        | Ok meetup -> 
-            Assert.True("title" = MeetupTitle.value meetup.Title)
-            Assert.True(MeetupState.Created = meetup.State) 
-        | Error _ -> Assert.True(true)
+    let publishData = result{
+        let! seats = 100 |> NumberOfSeats.create
+        let time = (DateTime.Now,DateTime.Now.AddDays(1.0)) |> DateTimeRange
+        let address = "home" |> Address
+        return {NumberOfSeats = seats;Location = address;Time=time}
+    }
+   
+
+    let result = createData |> Result.map Meetup.Created |> Result.bind2 Meetup.publishMeetup publishData
+
+    Assert.True(Result.isOk(result))
+
+    match result with
+    |Ok meetup -> function 
+                  |Meetup.Published p -> Assert.True(MeetupTitle.value(p.CreateData.Title) = "title") 
+                  |_ -> "Incorrect state" |> failwith
+    |Error e -> e |> failwith           
 
 [<Theory>]
 [<InlineData(0)>]
