@@ -86,12 +86,9 @@ module Meetup=
 
 
 module NumberOfSeats =
-    let create seats=
-        if seats < 1 then
-            Error "NumberOfSeats can not be negative"
-        else if seats > 1000 then
-            Error "NumberOfSeats can not be more than 1000"
-        else
-            Ok (NumberOfSeats seats)
+    let create = function
+        | seats when seats < 1 -> Error "NumberOfSeats can not be negative"
+        | seats when seats > 1000 -> Error "NumberOfSeats can not be more than 1000"
+        | seats -> seats |> NumberOfSeats |> Ok
     
     let value (NumberOfSeats seats) = seats 
