@@ -1,4 +1,5 @@
 #!/bin/bash
 rm -rf *.sln && \
 dotnet new sln && \
-dotnet sln add **/**/*.csproj
+dotnet sln add **/**/*.csproj && \
+dotnet sln add **/**/**/**/*.fsproj
