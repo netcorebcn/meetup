@@ -25,8 +25,6 @@ let ``Given a created meetup when try to publish should change to publish meetup
 
     let result = createData |> Result.map Meetup.Created |> Result.bind2 Meetup.publishMeetup publishData
 
-    Assert.True(Result.isOk(result))
-
     match result with
     |Ok meetup -> function 
                   |Meetup.Published p -> Assert.True(MeetupTitle.value(p.CreateData.Title) = "title") 
