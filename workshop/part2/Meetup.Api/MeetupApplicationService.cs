@@ -31,7 +31,7 @@ namespace Meetup.Api
                 Meetups.V1.UpdateLocation cmd =>
                     ExecuteCommand(
                         cmd.Id,
-                        meetup => meetup.UpdateLocation(Address.From(cmd.Address))),
+                        meetup => meetup.UpdateLocation(Address.From(cmd.Location))),
                 Meetups.V1.UpdateDateTime cmd =>
                     ExecuteCommand(
                         cmd.Id,
@@ -41,8 +41,7 @@ namespace Meetup.Api
 
         private async Task ExecuteCommand(Guid id, Action<Meetup.Domain.Meetup> command)
         {
-            Domain.Meetup meetup = await GetMeetup(id);
-
+            var meetup = await GetMeetup(id);
             command(meetup);
             await _repo.Save(meetup);
         }

@@ -26,7 +26,7 @@ namespace Meetup.Api.Controllers
                 NumberOfSeats = meetup.NumberOfSeats.Value,
                 Start = meetup.TimeRange.Start,
                 End = meetup.TimeRange.End,
-                State = meetup.State
+                State = meetup.State.ToString()
             });
         }
 
@@ -38,7 +38,7 @@ namespace Meetup.Api.Controllers
         }
 
         [HttpPut]
-        [Route("title")]
+        [Route("seats")]
         public async Task<ActionResult> Put(Meetups.V1.UpdateNumberOfSeats request)
         {
             await _appService.Handle(request);
@@ -46,7 +46,7 @@ namespace Meetup.Api.Controllers
         }
 
         [HttpPut]
-        [Route("seats")]
+        [Route("title")]
         public async Task<ActionResult> Put(Meetups.V1.UpdateTitle request)
         {
             await _appService.Handle(request);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -38,7 +39,7 @@ namespace Meetup.IntegrationTests
             });
 
         public Task UpdateTime(Guid id, DateTime start, DateTime end) =>
-            _client.PutAsJsonAsync("title", new
+            _client.PutAsJsonAsync("time", new
             {
                 Id = id,
                 Start = start,
@@ -46,7 +47,7 @@ namespace Meetup.IntegrationTests
             });
 
         public Task UpdateLocation(Guid id, string location) =>
-            _client.PutAsJsonAsync("title", new
+            _client.PutAsJsonAsync("location", new
             {
                 Id = id,
                 Location = location
@@ -73,6 +74,8 @@ namespace Meetup.IntegrationTests
         public async Task<Meetup> Get(Guid id)
         {
             var response = await _client.GetAsync($"{id}");
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(content);
             return await response.Content.ReadAsAsync<Meetup>();
         }
     }
@@ -85,5 +88,14 @@ namespace Meetup.IntegrationTests
         public int NumberOfSeats { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
+        public MeetupState State { get; internal set; }
+
+        public enum MeetupState
+        {
+            Created,
+            Published,
+            Canceled,
+            Closed
+        }
     }
 }
