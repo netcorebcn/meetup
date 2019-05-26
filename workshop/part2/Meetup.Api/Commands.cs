@@ -23,6 +23,16 @@ namespace Meetup.Api
                 public Guid Id { get; set; }
             }
 
+            public class Close
+            {
+                public Guid Id { get; set; }
+            }
+
+            public class Cancel
+            {
+                public Guid Id { get; set; }
+            }
+
             public class UpdateDateTime
             {
                 public Guid Id { get; set; }

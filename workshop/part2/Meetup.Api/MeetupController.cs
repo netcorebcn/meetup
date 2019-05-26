@@ -76,5 +76,21 @@ namespace Meetup.Api.Controllers
             await _appService.Handle(request);
             return Ok();
         }
+
+        [HttpPut]
+        [Route("cancel")]
+        public async Task<ActionResult> Put(Meetups.V1.Cancel request)
+        {
+            await _appService.Handle(request);
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("close")]
+        public async Task<ActionResult> Put(Meetups.V1.Close request)
+        {
+            await _appService.Handle(request);
+            return Ok();
+        }
     }
 }

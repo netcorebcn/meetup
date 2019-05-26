@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Xunit;
 
 namespace Meetup.IntegrationTests
@@ -88,7 +91,7 @@ namespace Meetup.IntegrationTests
         public int NumberOfSeats { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
-        public MeetupState State { get; internal set; }
+        public MeetupState State { get; set; }
 
         public enum MeetupState
         {

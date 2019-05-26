@@ -36,6 +36,18 @@ namespace Meetup.Api
                     ExecuteCommand(
                         cmd.Id,
                         meetup => meetup.UpdateTime(DateTimeRange.From(cmd.Start, cmd.End))),
+                Meetups.V1.Publish cmd =>
+                    ExecuteCommand(
+                        cmd.Id,
+                        meetup => meetup.Publish()),
+                Meetups.V1.Cancel cmd =>
+                    ExecuteCommand(
+                        cmd.Id,
+                        meetup => meetup.Cancel()),
+                Meetups.V1.Close cmd =>
+                    ExecuteCommand(
+                        cmd.Id,
+                        meetup => meetup.Close()),
                 _ => throw new InvalidOperationException($"Command type {command.GetType().FullName} is unknown")
             };
 
