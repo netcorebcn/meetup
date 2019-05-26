@@ -24,19 +24,23 @@ namespace Meetup.Api
 
         public async Task<Domain.Meetup> Get(Guid id)
         {
-            var doc = await _meetups.Find<MeetupDocument>(meetup => meetup.Id == id.ToString()).FirstOrDefaultAsync();
+            var doc = await _meetups
+            .Find<MeetupDocument>(meetup => meetup.Id == id)
+            .FirstOrDefaultAsync();
 
-            return new Domain.Meetup(
-                MeetupId.From(id),
-                MeetupTitle.From(doc.Title),
-                Address.From(doc.Location),
-                SeatsNumber.From(doc.NumberOfSeats),
-                DateTimeRange.From(doc.Start, doc.End),
-                Enum.Parse<MeetupState>(doc.State));
+            return doc != null
+            ? new Domain.Meetup(
+                    MeetupId.From(id),
+                    MeetupTitle.From(doc.Title),
+                    Address.From(doc.Location),
+                    SeatsNumber.From(doc.NumberOfSeats),
+                    DateTimeRange.From(doc.Start, doc.End),
+                    Enum.Parse<MeetupState>(doc.State))
+            : null;
         }
 
         public async Task Save(Domain.Meetup entity) =>
-            await _meetups.ReplaceOneAsync(_ => true, new MeetupDocument
+            await _meetups.ReplaceOneAsync(meetup => meetup.Id == entity.Id, new MeetupDocument
             {
                 Id = entity.Id,
                 Title = entity.Title,
@@ -54,8 +58,7 @@ namespace Meetup.Api
     public class MeetupDocument
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public Guid Id { get; set; }
 
         [BsonElement("Title")]
         public string Title { get; set; }

@@ -11,6 +11,8 @@ namespace Meetup.Api
 
         public MeetupApplicationService(IMeetupRepository repo) => _repo = repo;
 
+        public Task<Domain.Meetup> Get(Guid id) => GetMeetup(id);
+
         public Task Handle(object command) =>
             command switch
             {
@@ -39,14 +41,21 @@ namespace Meetup.Api
 
         private async Task ExecuteCommand(Guid id, Action<Meetup.Domain.Meetup> command)
         {
+            Domain.Meetup meetup = await GetMeetup(id);
+
+            command(meetup);
+            await _repo.Save(meetup);
+        }
+
+        private async Task<Domain.Meetup> GetMeetup(Guid id)
+        {
             var meetup = await _repo.Get(id);
             if (meetup == null)
             {
                 throw new Exception($"Meetup not found, id {id}");
             }
 
-            command(meetup);
-            await _repo.Save(meetup);
+            return meetup;
         }
     }
 }

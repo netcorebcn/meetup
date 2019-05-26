@@ -14,6 +14,22 @@ namespace Meetup.Api.Controllers
 
         public MeetupController(MeetupApplicationService appService) => _appService = appService;
 
+        [HttpGet("{id}")]
+        public async Task<ActionResult> Get(Guid id)
+        {
+            var meetup = await _appService.Get(id);
+            return Ok(new
+            {
+                Id = meetup.Id.Value,
+                Title = meetup.Title.Value,
+                Location = meetup.Location.Value,
+                NumberOfSeats = meetup.NumberOfSeats.Value,
+                Start = meetup.TimeRange.Start,
+                End = meetup.TimeRange.End,
+                State = meetup.State
+            });
+        }
+
         [HttpPost]
         public async Task<ActionResult> Post(Meetups.V1.Create request)
         {
