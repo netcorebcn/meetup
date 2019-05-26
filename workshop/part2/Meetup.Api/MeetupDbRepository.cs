@@ -2,18 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Meetup.Domain;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 
 namespace Meetup.Api
 {
-    public class MongoDbVotingService : IMeetupRepository
+    public class MeetupDbRepository : IMeetupRepository
     {
         private readonly IMongoCollection<MeetupDocument> _meetups;
 
-        public MongoDbVotingService(string connectionString)
+        public MeetupDbRepository(IConfiguration configuration)
         {
+            var connectionString = configuration["mongodb"] ?? throw new ArgumentNullException("Missing mongodb configuration connection string");
+
             var client = new MongoClient(connectionString);
             var db = client.GetDatabase("meetup");
             _meetups = db.GetCollection<MeetupDocument>("meetupevents");
@@ -32,8 +35,7 @@ namespace Meetup.Api
                 Enum.Parse<MeetupState>(doc.State));
         }
 
-        public async Task Save(Domain.Meetup entity)
-        {
+        public async Task Save(Domain.Meetup entity) =>
             await _meetups.ReplaceOneAsync(_ => true, new MeetupDocument
             {
                 Id = entity.Id,
@@ -43,12 +45,10 @@ namespace Meetup.Api
                 Start = entity.TimeRange.Start,
                 End = entity.TimeRange.End,
                 State = entity.State.ToString()
-            },
-            new UpdateOptions
+            }, new UpdateOptions
             {
                 IsUpsert = true
             });
-        }
     }
 
     public class MeetupDocument
