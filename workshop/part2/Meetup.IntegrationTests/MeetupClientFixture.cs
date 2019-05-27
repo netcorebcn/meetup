@@ -27,7 +27,7 @@ namespace Meetup.IntegrationTests
                 Policy<HttpResponseMessage>
                 .Handle<HttpRequestException>()
                 .OrResult(r => r.StatusCode == HttpStatusCode.InternalServerError)
-                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(5)));
+                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(2)));
 
 
             servicesCollection

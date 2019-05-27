@@ -20,28 +20,28 @@ namespace Meetup.IntegrationTests
             client.BaseAddress = new Uri(configuration["meetupUrl"] ?? "http://localhost:5000/api/meetup/");
         }
 
-        public Task Create(Guid id, string title) =>
+        public Task<HttpResponseMessage> Create(Guid id, string title) =>
             _client.PostAsJsonAsync("", new
             {
                 Id = id,
                 Title = title
             });
 
-        public Task UpdateTitle(Guid id, string title) =>
+        public Task<HttpResponseMessage> UpdateTitle(Guid id, string title) =>
             _client.PutAsJsonAsync("title", new
             {
                 Id = id,
                 Title = title
             });
 
-        public Task UpdateSeats(Guid id, int seats) =>
+        public Task<HttpResponseMessage> UpdateSeats(Guid id, int seats) =>
             _client.PutAsJsonAsync("seats", new
             {
                 Id = id,
                 NumberOfSeats = seats
             });
 
-        public Task UpdateTime(Guid id, DateTime start, DateTime end) =>
+        public Task<HttpResponseMessage> UpdateTime(Guid id, DateTime start, DateTime end) =>
             _client.PutAsJsonAsync("time", new
             {
                 Id = id,
@@ -49,26 +49,26 @@ namespace Meetup.IntegrationTests
                 End = end
             });
 
-        public Task UpdateLocation(Guid id, string location) =>
+        public Task<HttpResponseMessage> UpdateLocation(Guid id, string location) =>
             _client.PutAsJsonAsync("location", new
             {
                 Id = id,
                 Location = location
             });
 
-        public Task Publish(Guid id) =>
+        public Task<HttpResponseMessage> Publish(Guid id) =>
             _client.PutAsJsonAsync("publish", new
             {
                 Id = id,
             });
 
-        public Task Cancel(Guid id) =>
+        public Task<HttpResponseMessage> Cancel(Guid id) =>
             _client.PutAsJsonAsync("cancel", new
             {
                 Id = id,
             });
 
-        public Task Close(Guid id) =>
+        public Task<HttpResponseMessage> Close(Guid id) =>
             _client.PutAsJsonAsync("close", new
             {
                 Id = id,
@@ -78,7 +78,6 @@ namespace Meetup.IntegrationTests
         {
             var response = await _client.GetAsync($"{id}");
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(content);
             return await response.Content.ReadAsAsync<Meetup>();
         }
     }
