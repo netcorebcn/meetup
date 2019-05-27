@@ -21,7 +21,7 @@ namespace Meetup.IntegrationTests
             _client.TestCase(
                 c => c.Create(),
                 AssertOk,
-                meetup => meetup.AssertCreated()
+                AssertCreated
             );
 
         [Fact]
@@ -35,7 +35,7 @@ namespace Meetup.IntegrationTests
                 AssertOk,
                 meetup =>
                 {
-                    meetup.AssertCreated();
+                    AssertCreated(meetup);
                     Assert.Equal(numberOfSeats, meetup.NumberOfSeats);
                 }
             );
@@ -51,13 +51,13 @@ namespace Meetup.IntegrationTests
                 AssertOk,
                 meetup =>
                 {
-                    meetup.AssertCreated();
+                    AssertCreated(meetup);
                     Assert.Equal(location, meetup.Location);
                 }
             );
 
         [Fact]
-        public Task PublishTest() =>
+        public Task Given_Invalid_Meetup_When_Publish_Then_Error() =>
             _client.TestCase(
                 async c =>
                 {
@@ -65,6 +65,21 @@ namespace Meetup.IntegrationTests
                     return await c.Publish();
                 },
                 AssertError
+            );
+
+        [Fact]
+        public Task Given_Invalid_Meetup_When_Publish_Then_Published() =>
+            _client.TestCase(
+                async c =>
+                {
+                    await c.Create();
+                    await c.UpdateLocation();
+                    await c.UpdateSeats();
+                    await c.UpdateTime();
+                    return await c.Publish();
+                },
+                AssertOk,
+                AssertPublished
             );
     }
 
@@ -106,11 +121,20 @@ namespace Meetup.IntegrationTests
 
         public static Task<HttpResponseMessage> Publish(this MeetupClient @this) => @this.Publish(id);
 
-        public static void AssertCreated(this Meetup meetup)
+        public static void AssertCreated(Meetup meetup)
         {
             Assert.Equal(id, meetup.Id);
             Assert.Equal(title, meetup.Title);
             Assert.Equal(MeetupState.Created, meetup.State);
+        }
+
+        public static void AssertPublished(Meetup meetup)
+        {
+            Assert.Equal(id, meetup.Id);
+            Assert.Equal(title, meetup.Title);
+            Assert.Equal(location, meetup.Location);
+            Assert.Equal(numberOfSeats, meetup.NumberOfSeats);
+            Assert.Equal(MeetupState.Published, meetup.State);
         }
 
         public static Task<HttpResponseMessage> UpdateSeats(this MeetupClient @this) =>
@@ -118,6 +142,9 @@ namespace Meetup.IntegrationTests
 
         public static Task<HttpResponseMessage> UpdateLocation(this MeetupClient @this) =>
             @this.UpdateLocation(id, location);
+
+        public static Task<HttpResponseMessage> UpdateTime(this MeetupClient @this) =>
+            @this.UpdateTime(id, start, start.AddHours(2));
 
         public static async Task<Meetup> Get(this MeetupClient @this) => await @this.Get(id);
 
