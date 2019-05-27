@@ -31,8 +31,8 @@ namespace Meetup.IntegrationTests
 
 
             servicesCollection
-                .AddHttpClient<MeetupClient>()
-                .AddPolicyHandlerFromRegistry("retry");
+                .AddHttpClient<MeetupClient>();
+            // .AddPolicyHandlerFromRegistry("retry");
 
             var serviceProvider = servicesCollection.BuildServiceProvider();
             MeetupClient = serviceProvider.GetService<MeetupClient>();
