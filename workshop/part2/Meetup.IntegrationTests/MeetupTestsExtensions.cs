@@ -23,12 +23,8 @@ namespace Meetup.IntegrationTests
             Action<Meetup> assert = null)
         {
             assert = assert ?? (_ => { });
-
             var response = await command(@this);
             assertResponse(response);
-
-            var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(content);
             await @this.Get(id);
         }
 
