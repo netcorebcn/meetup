@@ -34,11 +34,11 @@ namespace Meetup.Domain
 
         public bool CanRaiseEvent(Type eventType) => _events.Any(type => type == eventType);
         public bool CanRaiseEvent<T>() => CanRaiseEvent(typeof(T));
-        public void EnsureCanRaiseEvent(object @event)
+        public void EnsureCanRaiseEvent(Type eventType)
         {
-            if (!CanRaiseEvent(@event.GetType()))
+            if (!CanRaiseEvent(eventType))
             {
-                throw new MeetupDomainException($"State {Name}, Can not raise {@event.GetType().Name}");
+                throw new MeetupDomainException($"State {Name}, Can not raise {eventType.Name}");
             }
         }
 

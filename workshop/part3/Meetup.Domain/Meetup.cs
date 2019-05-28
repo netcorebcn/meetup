@@ -122,7 +122,7 @@ namespace Meetup.Domain
 
         private void Apply(object @event)
         {
-            State.EnsureCanRaiseEvent(@event);
+            State.EnsureCanRaiseEvent(@event.GetType());
             When(@event);
             EnsureInvariants();
             _events.Add(@event);
