@@ -22,5 +22,20 @@ namespace Meetup.Domain.Tests
             Assert.Equal(DateTimeRange.None, noneRange1);
             Assert.Equal(noneRange2, noneRange1);
         }
+
+        [Theory]
+        [InlineData("2019/06/19", "19:00")]
+        [InlineData("2019/06-19", "19:00")]
+        [InlineData("19-06-19", "19:00")]
+        [InlineData("2019-13-19", "19:00")]
+        [InlineData("2019-12-32", "19:00")]
+        [InlineData("2019-12-19", "24:01")]
+        [InlineData("2019-12-19", "21:60")]
+        public void Giving_wrong_date_or_pattern_should_thow_exception(string date, string time)
+        {
+            Assert.Throws<ArgumentException>(() =>
+                DateTimeRange.From(date: date, time: time, durationInHours: 3)
+            );
+        }
     }
 }
