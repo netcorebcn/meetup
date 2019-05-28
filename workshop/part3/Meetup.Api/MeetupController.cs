@@ -26,7 +26,9 @@ namespace Meetup.Api.Controllers
                 NumberOfSeats = meetup.NumberOfSeats.Value,
                 Start = meetup.TimeRange.Start,
                 End = meetup.TimeRange.End,
-                State = meetup.State.ToString()
+                State = meetup.State.ToString(),
+                MembersGoing = meetup.MembersGoing.ToDictionary(k => k.Key.Value.ToString(), v => v.Value),
+                MembersNotGoing = meetup.MembersNotGoing.ToDictionary(k => k.Key.Value.ToString(), v => v.Value)
             });
         }
 
@@ -72,6 +74,22 @@ namespace Meetup.Api.Controllers
         [HttpPut]
         [Route("publish")]
         public async Task<ActionResult> Put(Meetups.V1.Publish request)
+        {
+            await _appService.Handle(request);
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("acceptrsvp")]
+        public async Task<ActionResult> Put(Meetups.V1.AcceptRSVP request)
+        {
+            await _appService.Handle(request);
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("rejectrsvp")]
+        public async Task<ActionResult> Put(Meetups.V1.RejectRSVP request)
         {
             await _appService.Handle(request);
             return Ok();

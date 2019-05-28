@@ -21,7 +21,15 @@ namespace Meetup.Domain
         private readonly Dictionary<MemberId, DateTime> _membersNotGoing = new Dictionary<MemberId, DateTime>();
         public IReadOnlyDictionary<MemberId, DateTime> MembersNotGoing => _membersNotGoing;
 
-        public Meetup(MeetupId id, MeetupTitle title, Address location, SeatsNumber numberOfSeats, DateTimeRange timeRange, MeetupState state)
+        public Meetup(
+            MeetupId id,
+            MeetupTitle title,
+            Address location,
+            SeatsNumber numberOfSeats,
+            DateTimeRange timeRange,
+            Dictionary<MemberId, DateTime> membersGoing,
+            Dictionary<MemberId, DateTime> membersNotGoing,
+            MeetupState state)
         {
             Id = id;
             Title = title;
@@ -29,6 +37,8 @@ namespace Meetup.Domain
             NumberOfSeats = numberOfSeats;
             TimeRange = timeRange;
             State = state;
+            _membersGoing = membersGoing;
+            _membersNotGoing = membersNotGoing;
             EnsureInvariants();
         }
 

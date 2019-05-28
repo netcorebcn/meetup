@@ -51,6 +51,20 @@ namespace Meetup.Api
                 public Guid Id { get; set; }
                 public string Title { get; set; }
             }
+
+            public class AcceptRSVP
+            {
+                public Guid Id { get; set; }
+                public Guid MemberId { get; set; }
+                public DateTime AcceptedAt { get; set; }
+            }
+
+            public class RejectRSVP
+            {
+                public Guid Id { get; set; }
+                public Guid MemberId { get; set; }
+                public DateTime RejectedAt { get; set; }
+            }
         }
     }
 }

@@ -13,7 +13,6 @@ namespace Meetup.IntegrationTests
     public class MeetupTests : IClassFixture<MeetupClientFixture>
     {
         private readonly MeetupClient _client;
-
         public MeetupTests(MeetupClientFixture fixture) => _client = fixture.MeetupClient;
 
         [Fact]
@@ -127,5 +126,39 @@ namespace Meetup.IntegrationTests
                 AssertOk,
                 AssertClosed
             );
+
+        [Fact]
+        public async Task Given_Published_Meetup_When_AcceptRSVP_Then_MemberGoing()
+        {
+            var memberId = Guid.NewGuid();
+            var acceptedAt = DateTime.UtcNow;
+
+            await _client.TestCase(
+                async c =>
+                {
+                    await c.Published();
+                    return await c.AcceptRSVP(memberId, acceptedAt);
+                },
+                AssertOk,
+                m => Assert.True(m.MembersGoing.ContainsKey(memberId))
+            );
+        }
+
+        [Fact]
+        public async Task Given_Published_Meetup_When_RejectRSVP_Then_MemberNotGoing()
+        {
+            var memberId = Guid.NewGuid();
+            var rejectedAt = DateTime.UtcNow;
+
+            await _client.TestCase(
+                async c =>
+                {
+                    await c.Published();
+                    return await c.RejectRSVP(memberId, rejectedAt);
+                },
+                AssertOk,
+                m => Assert.True(m.MembersNotGoing.ContainsKey(memberId))
+            );
+        }
     }
 }

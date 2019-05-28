@@ -62,6 +62,22 @@ namespace Meetup.IntegrationTests
                 Id = id,
             });
 
+        public Task<HttpResponseMessage> AcceptRSVP(Guid id, Guid memberId, DateTime acceptedAt) =>
+            _client.PutAsJsonAsync("acceptrsvp", new
+            {
+                Id = id,
+                MemberId = memberId,
+                AcceptedAt = acceptedAt
+            });
+
+        public Task<HttpResponseMessage> RejectRSVP(Guid id, Guid memberId, DateTime rejectedAt) =>
+            _client.PutAsJsonAsync("rejectrsvp", new
+            {
+                Id = id,
+                MemberId = memberId,
+                RejectedAt = rejectedAt
+            });
+
         public Task<HttpResponseMessage> Cancel(Guid id) =>
             _client.PutAsJsonAsync("cancel", new
             {
@@ -77,6 +93,7 @@ namespace Meetup.IntegrationTests
         public async Task<Meetup> Get(Guid id)
         {
             var response = await _client.GetAsync($"{id}");
+            Console.WriteLine((await response.Content.ReadAsStringAsync()));
             var content = await response.Content.ReadAsStringAsync();
             return await response.Content.ReadAsAsync<Meetup>();
         }
@@ -91,6 +108,8 @@ namespace Meetup.IntegrationTests
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
         public MeetupState State { get; set; }
+        public Dictionary<Guid, DateTime> MembersGoing { get; set; }
+        public Dictionary<Guid, DateTime> MembersNotGoing { get; set; }
 
         public enum MeetupState
         {

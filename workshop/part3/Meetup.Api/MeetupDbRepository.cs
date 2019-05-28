@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using System.Linq;
 
 namespace Meetup.Api
 {
@@ -35,6 +36,8 @@ namespace Meetup.Api
                     Address.From(doc.Location),
                     SeatsNumber.From(doc.NumberOfSeats),
                     DateTimeRange.From(doc.Start, doc.End),
+                    doc.MembersGoing.ToDictionary(k => MemberId.From(Guid.Parse(k.Key)), v => v.Value),
+                    doc.MembersNotGoing.ToDictionary(k => MemberId.From(Guid.Parse(k.Key)), v => v.Value),
                     doc.State.ToLower() switch
                     {
                         "created" => MeetupState.Created,
@@ -55,7 +58,9 @@ namespace Meetup.Api
                 NumberOfSeats = entity.NumberOfSeats,
                 Start = entity.TimeRange.Start,
                 End = entity.TimeRange.End,
-                State = entity.State.ToString()
+                State = entity.State.ToString(),
+                MembersGoing = entity.MembersGoing.ToDictionary(x => x.Key.Value.ToString(), y => y.Value),
+                MembersNotGoing = entity.MembersNotGoing.ToDictionary(x => x.Key.Value.ToString(), y => y.Value),
             }, new UpdateOptions
             {
                 IsUpsert = true
@@ -84,5 +89,11 @@ namespace Meetup.Api
 
         [BsonElement("State")]
         public string State { get; set; }
+
+        [BsonElement("MembersGoing")]
+        public Dictionary<string, DateTime> MembersGoing { get; set; }
+
+        [BsonElement("MembersNotGoing")]
+        public Dictionary<string, DateTime> MembersNotGoing { get; set; }
     }
 }

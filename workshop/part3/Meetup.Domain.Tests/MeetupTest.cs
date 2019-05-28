@@ -3,6 +3,7 @@ using Xunit;
 using static Meetup.Domain.Tests.MeetupTestExtensions;
 using Meetup.Domain;
 using System.Linq;
+using System.Collections.Generic;
 
 #nullable enable
 namespace Meetup.Domain.Tests
@@ -117,6 +118,8 @@ namespace Meetup.Domain.Tests
                 Address.None,
                 SeatsNumber.None,
                 DateTimeRange.None,
+                new Dictionary<MemberId, DateTime>(),
+                new Dictionary<MemberId, DateTime>(),
                 MeetupState.Created);
 
             Assert.Equal(id, meetup.Id);
@@ -136,6 +139,8 @@ namespace Meetup.Domain.Tests
                     Address.From(address),
                     SeatsNumber.From(numberOfSeats),
                     timeRange,
+                    new Dictionary<MemberId, DateTime>(),
+                    new Dictionary<MemberId, DateTime>(),
                     state);
 
                 Assert.Equal(id, meetup.Id);
@@ -160,6 +165,8 @@ namespace Meetup.Domain.Tests
                     Address.None,
                     SeatsNumber.From(numberOfSeats),
                     timeRange,
+                    new Dictionary<MemberId, DateTime>(),
+                    new Dictionary<MemberId, DateTime>(),
                     state));
             });
         }

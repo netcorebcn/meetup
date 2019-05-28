@@ -25,7 +25,8 @@ namespace Meetup.IntegrationTests
             assert = assert ?? (_ => { });
             var response = await command(@this);
             assertResponse(response);
-            await @this.Get(id);
+            var meetup = await @this.Get(id);
+            assert(meetup);
         }
 
         public static void AssertOk(HttpResponseMessage response) =>
@@ -50,6 +51,11 @@ namespace Meetup.IntegrationTests
         }
 
         public static Task<HttpResponseMessage> Publish(this MeetupClient @this) => @this.Publish(id);
+        public static Task<HttpResponseMessage> AcceptRSVP(this MeetupClient @this, Guid memberId, DateTime acceptedAt) =>
+            @this.AcceptRSVP(id, memberId, acceptedAt);
+        public static Task<HttpResponseMessage> RejectRSVP(this MeetupClient @this, Guid memberId, DateTime rejectedAt) =>
+            @this.RejectRSVP(id, memberId, rejectedAt);
+
         public static Task<HttpResponseMessage> Cancel(this MeetupClient @this) => @this.Cancel(id);
         public static Task<HttpResponseMessage> Close(this MeetupClient @this) => @this.Close(id);
 

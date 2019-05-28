@@ -40,6 +40,14 @@ namespace Meetup.Api
                     ExecuteCommand(
                         cmd.Id,
                         meetup => meetup.Publish()),
+                Meetups.V1.AcceptRSVP cmd =>
+                    ExecuteCommand(
+                        cmd.Id,
+                        meetup => meetup.AcceptRSVP(MemberId.From(cmd.MemberId), cmd.AcceptedAt)),
+                Meetups.V1.RejectRSVP cmd =>
+                    ExecuteCommand(
+                        cmd.Id,
+                        meetup => meetup.RejectRSVP(MemberId.From(cmd.MemberId), cmd.RejectedAt)),
                 Meetups.V1.Cancel cmd =>
                     ExecuteCommand(
                         cmd.Id,
