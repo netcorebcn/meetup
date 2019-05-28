@@ -32,8 +32,8 @@ module MeetupId=
         
 
 module Meetup =
-    let publishMeetup publishData meetup =
-        match meetup with
+    let publishMeetup publishData =
+        function
         | Created created-> {CreateData = created;PublishData = publishData} |> Published |> Ok
         | Published _ -> Error "Already published"
         | Canceled _ -> Error "Meetup is canceled"
