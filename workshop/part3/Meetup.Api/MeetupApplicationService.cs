@@ -11,8 +11,6 @@ namespace Meetup.Api
 
         public MeetupApplicationService(IMeetupRepository repo) => _repo = repo;
 
-        public Task<Domain.Meetup> Get(Guid id) => GetMeetup(id);
-
         public Task Handle(object command) =>
             command switch
             {

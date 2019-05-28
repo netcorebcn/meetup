@@ -17,7 +17,6 @@ namespace Meetup.Api
         public MeetupDbRepository(IConfiguration configuration)
         {
             var connectionString = configuration["mongodb"] ?? throw new ArgumentNullException("Missing mongodb configuration connection string");
-
             var client = new MongoClient(connectionString);
             var db = client.GetDatabase("meetup");
             _meetups = db.GetCollection<MeetupDocument>("meetupevents");

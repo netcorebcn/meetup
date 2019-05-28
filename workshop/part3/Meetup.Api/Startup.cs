@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace Meetup.Api
@@ -23,6 +24,7 @@ namespace Meetup.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            AddMongoDatabase();
             services.AddScoped<MeetupApplicationService>();
             services.AddScoped<IMeetupRepository, MeetupDbRepository>();
             services.AddControllers().AddNewtonsoftJson();
@@ -35,6 +37,12 @@ namespace Meetup.Api
                         Version = "v1"
                     });
             });
+
+            void AddMongoDatabase()
+            {
+                var client = new MongoClient(Configuration["mongodb"] ?? "mongodb://localhost");
+                services.AddScoped<IMongoDatabase>(_ => client.GetDatabase("meetup"));
+            }
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

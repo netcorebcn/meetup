@@ -17,7 +17,7 @@ namespace Meetup.IntegrationTests
         public MeetupClient(HttpClient client, IConfiguration configuration)
         {
             _client = client;
-            client.BaseAddress = new Uri(configuration["meetupUrl"] ?? "http://localhost:5000/api/meetup/");
+            client.BaseAddress = new Uri(configuration["meetupUrl"] ?? "http://localhost:5000/meetup/");
         }
 
         public Task<HttpResponseMessage> Create(Guid id, string title) =>
@@ -93,7 +93,8 @@ namespace Meetup.IntegrationTests
         public async Task<Meetup> Get(Guid id)
         {
             var response = await _client.GetAsync($"{id}");
-            Console.WriteLine((await response.Content.ReadAsStringAsync()));
+            var log = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Get RESPONSE: {log}");
             var content = await response.Content.ReadAsStringAsync();
             return await response.Content.ReadAsAsync<Meetup>();
         }

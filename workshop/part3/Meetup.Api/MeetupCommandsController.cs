@@ -6,31 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Meetup.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("/meetup")]
     [ApiController]
-    public class MeetupController : ControllerBase
+    public class MeetupCommandsController : ControllerBase
     {
         private readonly MeetupApplicationService _appService;
 
-        public MeetupController(MeetupApplicationService appService) => _appService = appService;
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult> Get(Guid id)
-        {
-            var meetup = await _appService.Get(id);
-            return Ok(new
-            {
-                Id = meetup.Id.Value,
-                Title = meetup.Title.Value,
-                Location = meetup.Location.Value,
-                NumberOfSeats = meetup.NumberOfSeats.Value,
-                Start = meetup.TimeRange.Start,
-                End = meetup.TimeRange.End,
-                State = meetup.State.ToString(),
-                MembersGoing = meetup.MembersGoing.ToDictionary(k => k.Key.Value.ToString(), v => v.Value),
-                MembersNotGoing = meetup.MembersNotGoing.ToDictionary(k => k.Key.Value.ToString(), v => v.Value)
-            });
-        }
+        public MeetupCommandsController(MeetupApplicationService appService) => _appService = appService;
 
         [HttpPost]
         public async Task<ActionResult> Post(Meetups.V1.Create request)
