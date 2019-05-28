@@ -10,7 +10,7 @@ namespace Meetup.Domain
         private MeetupTitle(string title)
         {
             if (string.IsNullOrEmpty(title)) throw new ArgumentException("Title must be specified", nameof(title));
-            if (title.Length > 50) throw new ArgumentException("Title must be less than 25 characters", nameof(title));
+            if (title.Length > 50) throw new ArgumentException("Title must be less than 50 characters", nameof(title));
             Value = title;
         }
         public static MeetupTitle None => From(" ");
