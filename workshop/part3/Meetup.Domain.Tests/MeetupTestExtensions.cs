@@ -14,6 +14,7 @@ namespace Meetup.Domain.Tests
 
         public static void GivenPublishedMeetup<T>(Action<Meetup> cmd, Action<Meetup, T> assertEvent) =>
             GivenMeetup(CreateMeetup().Published, cmd, assertEvent);
+
         public static void GivenPublishedMeetup<T>(Action<Meetup, T> assertEvent) =>
             GivenMeetup(CreateMeetup().Published, m => { }, assertEvent);
 

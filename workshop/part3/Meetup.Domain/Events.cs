@@ -90,6 +90,7 @@ namespace Meetup.Domain
             public RSVPAccepted(Guid meetupId, Guid memberId, DateTime acceptedAt)
             {
                 MeetupId = meetupId;
+                MemberId = memberId;
                 AcceptedAt = acceptedAt;
             }
         }

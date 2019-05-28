@@ -124,43 +124,99 @@ namespace Meetup.Domain.Tests
             Assert.Equal(MeetupState.Created, meetup.State);
         }
 
-        // [Theory]
-        // [InlineData(MeetupState.Created)]
-        // [InlineData(MeetupState.Published)]
-        // [InlineData(MeetupState.Canceled)]
-        // [InlineData(MeetupState.Closed)]
-        // public void Given_Valid_Meetup_When_Build_Then_Built(MeetupState state)
-        // {
-        //     var meetup = new Meetup(
-        //         MeetupId.From(id),
-        //         MeetupTitle.From(title),
-        //         Address.From(address),
-        //         SeatsNumber.From(numberOfSeats),
-        //         timeRange,
-        //         state);
+        [Fact]
+        public void Given_Valid_Meetup_When_Build_Then_Built()
+        {
+            new[] { MeetupState.Created, MeetupState.Published, MeetupState.Canceled, MeetupState.Closed }
+            .ToList().ForEach(state =>
+            {
+                var meetup = new Meetup(
+                    MeetupId.From(id),
+                    MeetupTitle.From(title),
+                    Address.From(address),
+                    SeatsNumber.From(numberOfSeats),
+                    timeRange,
+                    state);
 
-        //     Assert.Equal(id, meetup.Id);
-        //     Assert.Equal(title, meetup.Title);
-        //     Assert.Equal(address, meetup.Location);
-        //     Assert.Equal(numberOfSeats, meetup.NumberOfSeats);
-        //     Assert.Equal(timeRange, meetup.TimeRange);
-        //     Assert.Equal(state, meetup.State);
-        // }
+                Assert.Equal(id, meetup.Id);
+                Assert.Equal(title, meetup.Title);
+                Assert.Equal(address, meetup.Location);
+                Assert.Equal(numberOfSeats, meetup.NumberOfSeats);
+                Assert.Equal(timeRange, meetup.TimeRange);
+                Assert.Equal(state, meetup.State);
+            });
+        }
 
-        // [Theory]
-        // [InlineData(MeetupState.Published)]
-        // [InlineData(MeetupState.Canceled)]
-        // [InlineData(MeetupState.Closed)]
-        // public void Given_Invalid_Meetup_When_Build_Then_Throws(MeetupState state)
-        // {
-        //     Assert.Throws<MeetupDomainException>(() =>
-        //     new Meetup(
-        //         MeetupId.From(id),
-        //         MeetupTitle.From(title),
-        //         Address.None,
-        //         SeatsNumber.From(numberOfSeats),
-        //         timeRange,
-        //         state));
-        // }
+        [Fact]
+        public void Given_Invalid_Meetup_When_Build_Then_Throws()
+        {
+            new[] { MeetupState.Published, MeetupState.Canceled, MeetupState.Closed }
+            .ToList().ForEach(state =>
+            {
+                Assert.Throws<MeetupDomainException>(() =>
+                new Meetup(
+                    MeetupId.From(id),
+                    MeetupTitle.From(title),
+                    Address.None,
+                    SeatsNumber.From(numberOfSeats),
+                    timeRange,
+                    state));
+            });
+        }
+
+        [Fact]
+        public void Given_Published_Meetup_When_AcceptRSVP_Then_MemberGoing()
+        {
+            var memberId = MemberId.From(Guid.NewGuid());
+            var acceptedAt = DateTime.UtcNow;
+
+            GivenPublishedMeetup<Events.RSVPAccepted>(
+                cmd => cmd.AcceptRSVP(memberId, acceptedAt),
+                (m, ev) => Assert.Equal(acceptedAt, m.MembersGoing[memberId]));
+        }
+
+
+        [Fact]
+        public void Given_Published_Meetup_When_RejectRSVP_Then_MemberNotGoing()
+        {
+            var memberId = MemberId.From(Guid.NewGuid());
+            var rejectedAt = DateTime.UtcNow;
+
+            GivenPublishedMeetup<Events.RSVPRejected>(
+                cmd => cmd.RejectRSVP(memberId, rejectedAt),
+                (m, ev) => Assert.Equal(rejectedAt, m.MembersNotGoing[memberId]));
+        }
+
+        [Fact]
+        public void Given_NotPublished_Meetup_When_AcceptOrRejectRSVP_Then_Throws()
+        {
+            var memberId = MemberId.From(Guid.NewGuid());
+            var time = DateTime.UtcNow;
+            var meetup = CreateMeetup();
+            Assert.Throws<MeetupDomainException>(() => meetup.AcceptRSVP(memberId, time));
+            Assert.Throws<MeetupDomainException>(() => meetup.RejectRSVP(memberId, time));
+        }
+
+        [Fact]
+        public void Given_Closed_Meetup_When_AcceptOrRejectRSVP_Then_Throws()
+        {
+            var memberId = MemberId.From(Guid.NewGuid());
+            var time = DateTime.UtcNow;
+            var meetup = CreateMeetup().Published().Closed();
+
+            Assert.Throws<MeetupDomainException>(() => meetup.AcceptRSVP(memberId, time));
+            Assert.Throws<MeetupDomainException>(() => meetup.RejectRSVP(memberId, time));
+        }
+
+        [Fact]
+        public void Given_Canceled_Meetup_When_AcceptOrRejectRSVP_Then_Throws()
+        {
+            var memberId = MemberId.From(Guid.NewGuid());
+            var time = DateTime.UtcNow;
+            var meetup = CreateMeetup().Published().Canceled();
+
+            Assert.Throws<MeetupDomainException>(() => meetup.AcceptRSVP(memberId, time));
+            Assert.Throws<MeetupDomainException>(() => meetup.RejectRSVP(memberId, time));
+        }
     }
 }
