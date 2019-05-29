@@ -31,23 +31,53 @@ namespace Meetup.Domain
                     readModel.NumberOfSeats = ev.NumberOfSeats;
                     break;
                 case Events.RSVPAccepted ev:
-                    if (MeetupFull())
-                    {
-                        readModel.Waiting.Add(ev.MemberId);
-                    }
-                    else
-                    {
-                        readModel.Going.Add(ev.MemberId);
-                    }
+                    Going(ev.MemberId);
                     break;
                 case Events.RSVPRejected ev:
-                    readModel.NotGoing.Add(ev.MemberId);
+                    NotGoing(ev.MemberId);
+                    UpdateWaitingList();
                     break;
             }
 
             return readModel;
 
             bool MeetupFull() => readModel.NumberOfSeats == readModel.Going.Count;
+
+            void Going(Guid member)
+            {
+                if (MeetupFull())
+                {
+                    readModel.Waiting.Add(member);
+                    readModel.Going.Remove(member);
+                    readModel.NotGoing.Remove(member);
+                }
+                else
+                {
+                    readModel.Going.Add(member);
+                    readModel.NotGoing.Remove(member);
+                    readModel.Waiting.Remove(member);
+                }
+            }
+
+            void NotGoing(Guid member)
+            {
+                readModel.NotGoing.Add(member);
+                readModel.Going.Remove(member);
+                readModel.Waiting.Remove(member);
+            }
+
+            void UpdateWaitingList()
+            {
+                if (!MeetupFull())
+                {
+                    var firstWaiting = readModel.Waiting.FirstOrDefault();
+                    if (firstWaiting != default)
+                    {
+                        readModel.Waiting.Remove(firstWaiting);
+                        readModel.Going.Add(firstWaiting);
+                    }
+                }
+            }
         }
     }
 

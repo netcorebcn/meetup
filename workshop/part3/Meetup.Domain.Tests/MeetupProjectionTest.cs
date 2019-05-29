@@ -9,7 +9,7 @@ namespace Meetup.Domain.Tests
     public class MeetupProjectionTest
     {
         [Fact]
-        public void Given_ThreeGoing_With_TwoSeats_When_Project_Then_OneWaiting() =>
+        public void Given_ThreeGoing_When_Only_TwoSeats_Then_OneWaiting() =>
             TestCase(
                 project: projection => projection
                     .WhenPublishedMeetup()
@@ -19,9 +19,66 @@ namespace Meetup.Domain.Tests
                     .WhenMemberRejected(sara),
                 assert: readModel =>
                 {
+                    Assert.Equal(2, readModel.Going.Count);
+                    Assert.Equal(bob.memberId, readModel.Going.First());
                     Assert.Equal(jon.memberId, readModel.Going.Last());
+
                     Assert.Equal(carla.memberId, readModel.Waiting.Last());
                     Assert.Equal(sara.memberId, readModel.NotGoing.Last());
+                }
+            );
+
+        [Fact]
+        public void Given_ThreeGoing_With_TwoSeats_When_SomeoneRejects_Then_EmptyWaiting() =>
+            TestCase(
+                project: projection => projection
+                    .WhenPublishedMeetup()
+                    .WhenMemberAccepted(bob)
+                    .WhenMemberAccepted(jon)
+                    .WhenMemberAccepted(carla)
+                    .WhenMemberRejected(bob),
+                assert: readModel =>
+                {
+                    Assert.Equal(2, readModel.Going.Count);
+                    Assert.Empty(readModel.Waiting);
+                    Assert.Single(readModel.NotGoing);
+
+                    Assert.Equal(jon.memberId, readModel.Going.First());
+                    Assert.Equal(carla.memberId, readModel.Going.Last());
+                    Assert.Equal(bob.memberId, readModel.NotGoing.Last());
+                }
+            );
+
+
+        [Fact]
+        public void Given_Rejected_Rsvp_When_Accept_Then_Empty_NotGoing() =>
+            TestCase(
+                project: projection => projection
+                    .WhenPublishedMeetup()
+                    .WhenMemberRejected(bob)
+                    .WhenMemberAccepted(bob),
+                assert: readModel =>
+                {
+                    Assert.Equal(bob.memberId, readModel.Going.First());
+                    Assert.Single(readModel.Going);
+                    Assert.Empty(readModel.Waiting);
+                    Assert.Empty(readModel.NotGoing);
+                }
+            );
+
+        [Fact]
+        public void Given_Accepted_Rsvp_When_Reject_Then_Empty_Going() =>
+            TestCase(
+                project: projection => projection
+                    .WhenPublishedMeetup()
+                    .WhenMemberAccepted(bob)
+                    .WhenMemberRejected(bob),
+                assert: readModel =>
+                {
+                    Assert.Single(readModel.NotGoing);
+                    Assert.Equal(bob.memberId, readModel.NotGoing.Last());
+                    Assert.Empty(readModel.Going);
+                    Assert.Empty(readModel.Waiting);
                 }
             );
     }
@@ -61,6 +118,12 @@ namespace Meetup.Domain.Tests
                 new Events.MeetupTimeUpdated(meetupId, start, end),
                 new Events.MeetupPublished(meetupId)
             );
+            return projection;
+        }
+
+        public static MeetupProjection WhenNumberOfSeatsUpdated(this MeetupProjection projection, int seats)
+        {
+            projection.Project(new Events.MeetupNumberOfSeatsUpdated(meetupId, seats));
             return projection;
         }
 
