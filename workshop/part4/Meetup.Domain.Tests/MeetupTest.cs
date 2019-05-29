@@ -110,68 +110,6 @@ namespace Meetup.Domain.Tests
                 (m, ev) => Assert.Equal(m.NumberOfSeats, ev.NumberOfSeats));
 
         [Fact]
-        public void Given_Valid_Created_Meetup_When_Build_Then_Built()
-        {
-            var meetup = new Meetup(
-                MeetupId.From(id),
-                MeetupTitle.From(title),
-                Address.None,
-                SeatsNumber.None,
-                DateTimeRange.None,
-                new Dictionary<MemberId, DateTime>(),
-                new Dictionary<MemberId, DateTime>(),
-                MeetupState.Created);
-
-            Assert.Equal(id, meetup.Id);
-            Assert.Equal(title, meetup.Title);
-            Assert.Equal(MeetupState.Created, meetup.State);
-        }
-
-        [Fact]
-        public void Given_Valid_Meetup_When_Build_Then_Built()
-        {
-            new[] { MeetupState.Created, MeetupState.Published, MeetupState.Canceled, MeetupState.Closed }
-            .ToList().ForEach(state =>
-            {
-                var meetup = new Meetup(
-                    MeetupId.From(id),
-                    MeetupTitle.From(title),
-                    Address.From(address),
-                    SeatsNumber.From(numberOfSeats),
-                    timeRange,
-                    new Dictionary<MemberId, DateTime>(),
-                    new Dictionary<MemberId, DateTime>(),
-                    state);
-
-                Assert.Equal(id, meetup.Id);
-                Assert.Equal(title, meetup.Title);
-                Assert.Equal(address, meetup.Location);
-                Assert.Equal(numberOfSeats, meetup.NumberOfSeats);
-                Assert.Equal(timeRange, meetup.TimeRange);
-                Assert.Equal(state, meetup.State);
-            });
-        }
-
-        [Fact]
-        public void Given_Invalid_Meetup_When_Build_Then_Throws()
-        {
-            new[] { MeetupState.Published, MeetupState.Canceled, MeetupState.Closed }
-            .ToList().ForEach(state =>
-            {
-                Assert.Throws<MeetupDomainException>(() =>
-                new Meetup(
-                    MeetupId.From(id),
-                    MeetupTitle.From(title),
-                    Address.None,
-                    SeatsNumber.From(numberOfSeats),
-                    timeRange,
-                    new Dictionary<MemberId, DateTime>(),
-                    new Dictionary<MemberId, DateTime>(),
-                    state));
-            });
-        }
-
-        [Fact]
         public void Given_Published_Meetup_When_AcceptRSVP_Then_MemberGoing()
         {
             var memberId = MemberId.From(Guid.NewGuid());
@@ -224,6 +162,37 @@ namespace Meetup.Domain.Tests
 
             Assert.Throws<MeetupDomainException>(() => meetup.AcceptRSVP(memberId, time));
             Assert.Throws<MeetupDomainException>(() => meetup.RejectRSVP(memberId, time));
+        }
+
+        [Fact]
+        public void Given_ValidEvents_When_Build_Then_Built()
+        {
+            var id = MeetupId.From(Guid.NewGuid());
+            var meetup = MeetupAggregate.Build(
+                id,
+                new Events.MeetupCreated(id, "EventSourcing with Marten"),
+                new Events.MeetupNumberOfSeatsUpdated(id, 10),
+                new Events.MeetupLocationUpdated(id, "Barcelona"),
+                new Events.MeetupTimeUpdated(id, DateTime.UtcNow, DateTime.UtcNow.AddHours(2)),
+                new Events.MeetupPublished(id)
+            );
+
+            Assert.Equal(id, meetup.Id);
+        }
+
+        [Fact]
+        public void Given_Invalid_EvenStream_When_Build_Then_Throws()
+        {
+            var id = MeetupId.From(Guid.NewGuid());
+            Assert.Throws<MeetupDomainException>(() =>
+                MeetupAggregate.Build(
+                    id,
+                    new Events.MeetupCreated(id, "EventSourcing with Marten"),
+                    new Events.MeetupNumberOfSeatsUpdated(id, 10),
+                    new Events.MeetupLocationUpdated(id, "Barcelona"),
+                    new Events.MeetupPublished(id),
+                    new Events.MeetupTimeUpdated(id, DateTime.UtcNow, DateTime.UtcNow.AddHours(2))
+            ));
         }
     }
 }

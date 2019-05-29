@@ -4,11 +4,6 @@ using System.Linq;
 
 namespace Meetup.Domain
 {
-    public interface IProjection<TReadModel>
-    {
-        TReadModel Project(params object[] events);
-    }
-
     public class MeetupProjection : IProjection<MeetupReadModel>
     {
         private readonly MeetupReadModel readModel = new MeetupReadModel();
@@ -23,71 +18,60 @@ namespace Meetup.Domain
                 case Events.MeetupCreated ev:
                     readModel.Id = ev.Id;
                     readModel.Title = ev.Title;
+                    readModel.State = "Created";
                     break;
-                case Events.MeetupTitleUpdated ev:
-                    readModel.Title = ev.Title;
+                case Events.MeetupPublished ev:
+                    readModel.State = "Published";
+                    break;
+                case Events.MeetupCanceled ev:
+                    readModel.State = "Canceled";
+                    break;
+                case Events.MeetupClosed ev:
+                    readModel.State = "Closed";
                     break;
                 case Events.MeetupNumberOfSeatsUpdated ev:
                     readModel.NumberOfSeats = ev.NumberOfSeats;
                     break;
+                case Events.MeetupTimeUpdated ev:
+                    readModel.Start = ev.Start;
+                    readModel.End = ev.End;
+                    break;
+                case Events.MeetupTitleUpdated ev:
+                    readModel.Title = ev.Title;
+                    break;
+                case Events.MeetupLocationUpdated ev:
+                    readModel.Location = ev.Location;
+                    break;
                 case Events.RSVPAccepted ev:
-                    Going(ev.MemberId);
+                    readModel.MembersGoing.Add(ev.MemberId.ToString(), ev.AcceptedAt);
                     break;
                 case Events.RSVPRejected ev:
-                    NotGoing(ev.MemberId);
-                    UpdateWaitingList();
+                    readModel.MembersNotGoing.Add(ev.MemberId.ToString(), ev.RejectedAt);
                     break;
             }
 
             return readModel;
-
-            bool MeetupFull() => readModel.NumberOfSeats == readModel.Going.Count;
-
-            void Going(Guid member)
-            {
-                if (MeetupFull())
-                {
-                    readModel.Waiting.Add(member);
-                    readModel.Going.Remove(member);
-                    readModel.NotGoing.Remove(member);
-                }
-                else
-                {
-                    readModel.Going.Add(member);
-                    readModel.NotGoing.Remove(member);
-                    readModel.Waiting.Remove(member);
-                }
-            }
-
-            void NotGoing(Guid member)
-            {
-                readModel.NotGoing.Add(member);
-                readModel.Going.Remove(member);
-                readModel.Waiting.Remove(member);
-            }
-
-            void UpdateWaitingList()
-            {
-                if (!MeetupFull())
-                {
-                    var firstWaiting = readModel.Waiting.FirstOrDefault();
-                    if (firstWaiting != default)
-                    {
-                        readModel.Waiting.Remove(firstWaiting);
-                        readModel.Going.Add(firstWaiting);
-                    }
-                }
-            }
         }
     }
 
     public class MeetupReadModel
     {
         public Guid Id { get; set; }
+
         public string Title { get; set; }
-        public List<Guid> Going { get; set; } = new List<Guid>();
-        public List<Guid> NotGoing { get; set; } = new List<Guid>();
-        public List<Guid> Waiting { get; set; } = new List<Guid>();
+
+        public string Location { get; set; }
+
         public int NumberOfSeats { get; set; }
+
+        public DateTime Start { get; set; }
+
+        public DateTime End { get; set; }
+
+        public string State { get; set; }
+
+        public Dictionary<string, DateTime> MembersGoing { get; set; } = new Dictionary<string, DateTime>();
+
+        public Dictionary<string, DateTime> MembersNotGoing { get; set; } = new Dictionary<string, DateTime>();
     }
 }

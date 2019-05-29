@@ -15,7 +15,7 @@ namespace Meetup.Api
             command switch
             {
                 Meetups.V1.Create cmd =>
-                    _repo.Save(new Meetup.Domain.Meetup(
+                    _repo.Save(new MeetupAggregate(
                         MeetupId.From(cmd.Id),
                         MeetupTitle.From(cmd.Title))),
                 Meetups.V1.UpdateTitle cmd =>
@@ -57,14 +57,14 @@ namespace Meetup.Api
                 _ => throw new InvalidOperationException($"Command type {command.GetType().FullName} is unknown")
             };
 
-        private async Task ExecuteCommand(Guid id, Action<Meetup.Domain.Meetup> command)
+        private async Task ExecuteCommand(Guid id, Action<MeetupAggregate> command)
         {
             var meetup = await GetMeetup(id);
             command(meetup);
             await _repo.Save(meetup);
         }
 
-        private async Task<Domain.Meetup> GetMeetup(Guid id)
+        private async Task<MeetupAggregate> GetMeetup(Guid id)
         {
             var meetup = await _repo.Get(id);
             if (meetup == null)

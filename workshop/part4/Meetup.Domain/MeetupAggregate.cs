@@ -6,7 +6,7 @@ using System.Linq;
 #nullable enable
 namespace Meetup.Domain
 {
-    public class Meetup
+    public class MeetupAggregate
     {
         public MeetupId Id { get; private set; } = MeetupId.None;
         public MeetupTitle Title { get; private set; } = MeetupTitle.None;
@@ -21,29 +21,23 @@ namespace Meetup.Domain
         private readonly Dictionary<MemberId, DateTime> _membersNotGoing = new Dictionary<MemberId, DateTime>();
         public IReadOnlyDictionary<MemberId, DateTime> MembersNotGoing => _membersNotGoing;
 
-        public Meetup(
-            MeetupId id,
-            MeetupTitle title,
-            Address location,
-            SeatsNumber numberOfSeats,
-            DateTimeRange timeRange,
-            Dictionary<MemberId, DateTime> membersGoing,
-            Dictionary<MemberId, DateTime> membersNotGoing,
-            MeetupState state)
+        public static MeetupAggregate Build(MeetupId id, params object[] events)
         {
-            Id = id;
-            Title = title;
-            Location = location;
-            NumberOfSeats = numberOfSeats;
-            TimeRange = timeRange;
-            State = state;
-            _membersGoing = membersGoing;
-            _membersNotGoing = membersNotGoing;
-            EnsureInvariants();
+            var meetup = new MeetupAggregate(id);
+            events.ToList().ForEach(ev =>
+            {
+                meetup.State.EnsureCanRaiseEvent(ev.GetType());
+                meetup.When(ev);
+                meetup.EnsureInvariants();
+            });
+            return meetup;
         }
 
-        public Meetup(MeetupId id, MeetupTitle title) =>
+        private MeetupAggregate(MeetupId id) => Id = id;
+
+        public MeetupAggregate(MeetupId id, MeetupTitle title) =>
             Apply(new Events.MeetupCreated(id, title));
+
 
         public void UpdateNumberOfSeats(SeatsNumber number) =>
             Apply(new Events.MeetupNumberOfSeatsUpdated(Id, number));
@@ -71,7 +65,6 @@ namespace Meetup.Domain
 
         public void RejectRSVP(MemberId memberId, DateTime rejectedAt) =>
             Apply(new Events.RSVPRejected(Id, memberId, rejectedAt));
-
 
         private void When(object @event)
         {

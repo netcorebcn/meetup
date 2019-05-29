@@ -90,9 +90,9 @@ namespace Meetup.Domain.Tests
             sara = (Guid.NewGuid(), DateTime.UtcNow.AddSeconds(1)),
             carla = (Guid.NewGuid(), DateTime.UtcNow.AddSeconds(1));
 
-        public static void TestCase(Action<MeetupProjection> project, Action<MeetupReadModel> assert)
+        public static void TestCase(Action<AttendantsProjection> project, Action<AttendantsReadModel> assert)
         {
-            var projection = new MeetupProjection();
+            var projection = new AttendantsProjection();
             project(projection);
             var readModel = projection.ReadModel();
             assert(readModel);
@@ -101,7 +101,7 @@ namespace Meetup.Domain.Tests
             Assert.Equal(title, readModel.Title);
         }
 
-        public static MeetupProjection WhenPublishedMeetup(this MeetupProjection projection, params object[] events)
+        public static AttendantsProjection WhenPublishedMeetup(this AttendantsProjection projection, params object[] events)
         {
             projection.Project(
                 new Events.MeetupCreated(meetupId, title),
@@ -113,25 +113,25 @@ namespace Meetup.Domain.Tests
             return projection;
         }
 
-        public static MeetupProjection WhenNumberOfSeatsUpdated(this MeetupProjection projection, int seats)
+        public static AttendantsProjection WhenNumberOfSeatsUpdated(this AttendantsProjection projection, int seats)
         {
             projection.Project(new Events.MeetupNumberOfSeatsUpdated(meetupId, seats));
             return projection;
         }
 
-        public static MeetupProjection WhenMemberAccepted(this MeetupProjection projection, (Guid memberId, DateTime rsvpAt) member)
+        public static AttendantsProjection WhenMemberAccepted(this AttendantsProjection projection, (Guid memberId, DateTime rsvpAt) member)
         {
             projection.Project(new Events.RSVPAccepted(meetupId, member.memberId, member.rsvpAt));
             return projection;
         }
 
-        public static MeetupProjection WhenMemberRejected(this MeetupProjection projection, (Guid memberId, DateTime rsvpAt) member)
+        public static AttendantsProjection WhenMemberRejected(this AttendantsProjection projection, (Guid memberId, DateTime rsvpAt) member)
         {
             projection.Project(new Events.RSVPRejected(meetupId, member.memberId, member.rsvpAt));
             return projection;
         }
 
-        public static MeetupReadModel ReadModel(this MeetupProjection projection) => projection.Project();
+        public static AttendantsReadModel ReadModel(this AttendantsProjection projection) => projection.Project();
 
         public static void AssertEqual(this List<Guid> list, params (Guid memberId, DateTime at)[] guids) => Assert.Equal(guids.Select(x => x.memberId), list);
     }

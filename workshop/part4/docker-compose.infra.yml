@@ -1,0 +1,16 @@
+
+version: "3.6"
+
+services:
+  database:
+    image: mongo 
+    ports:
+      - 27017:27017
+
+  eventstore:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: changeit

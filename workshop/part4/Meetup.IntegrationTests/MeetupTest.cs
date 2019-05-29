@@ -13,6 +13,7 @@ namespace Meetup.IntegrationTests
     public class MeetupTests : IClassFixture<MeetupClientFixture>
     {
         private readonly MeetupClient _client;
+
         public MeetupTests(MeetupClientFixture fixture) => _client = fixture.MeetupClient;
 
         [Fact]

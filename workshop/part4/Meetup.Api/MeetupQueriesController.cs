@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Marten;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 
 namespace Meetup.Api.Controllers
 {
@@ -11,14 +11,14 @@ namespace Meetup.Api.Controllers
     [ApiController]
     public class MeetupQueriesController : ControllerBase
     {
-        private readonly IMongoDatabase _db;
+        private readonly IDocumentStore _eventStore;
 
-        public MeetupQueriesController(IMongoDatabase db) => _db = db;
+        public MeetupQueriesController(IDocumentStore eventStore) => _eventStore = eventStore;
 
         [HttpGet("{id}")]
         public async Task<ActionResult> Get(Guid id)
         {
-            var result = await _db.Query(new Queries.GetMeetup { Id = id });
+            var result = await _eventStore.Query(new Queries.GetMeetup { Id = id });
             return Ok(result);
         }
     }

@@ -12,19 +12,19 @@ namespace Meetup.Domain.Tests
         public readonly static int numberOfSeats = 50;
         public readonly static DateTimeRange timeRange = DateTimeRange.From(date: "2019-06-19", time: "19:00", durationInHours: 3);
 
-        public static void GivenPublishedMeetup<T>(Action<Meetup> cmd, Action<Meetup, T> assertEvent) =>
+        public static void GivenPublishedMeetup<T>(Action<MeetupAggregate> cmd, Action<MeetupAggregate, T> assertEvent) =>
             GivenMeetup(CreateMeetup().Published, cmd, assertEvent);
 
-        public static void GivenPublishedMeetup<T>(Action<Meetup, T> assertEvent) =>
+        public static void GivenPublishedMeetup<T>(Action<MeetupAggregate, T> assertEvent) =>
             GivenMeetup(CreateMeetup().Published, m => { }, assertEvent);
 
-        public static void GivenCreatedMeetup<T>(Action<Meetup> cmd, Action<Meetup, T> assertEvent) =>
+        public static void GivenCreatedMeetup<T>(Action<MeetupAggregate> cmd, Action<MeetupAggregate, T> assertEvent) =>
             GivenMeetup(CreateMeetup, cmd, assertEvent);
 
-        public static void GivenNothing<T>(Func<Meetup> initState, Action<Meetup, T> assertEvent) =>
+        public static void GivenNothing<T>(Func<MeetupAggregate> initState, Action<MeetupAggregate, T> assertEvent) =>
             GivenMeetup(initState, m => { }, assertEvent);
 
-        public static void GivenMeetup<T>(Func<Meetup> initState, Action<Meetup> cmd, Action<Meetup, T> assertEvent)
+        public static void GivenMeetup<T>(Func<MeetupAggregate> initState, Action<MeetupAggregate> cmd, Action<MeetupAggregate, T> assertEvent)
         {
             var meetup = initState();
             cmd(meetup);
@@ -36,11 +36,11 @@ namespace Meetup.Domain.Tests
             }
         }
 
-        public static Meetup CreateMeetup() => new Meetup(
+        public static MeetupAggregate CreateMeetup() => new MeetupAggregate(
             MeetupId.From(id),
             MeetupTitle.From(title));
 
-        public static Meetup AssertProperties(this Meetup @this)
+        public static MeetupAggregate AssertProperties(this MeetupAggregate @this)
         {
             Assert.Equal(id, @this.Id);
             Assert.Equal(title, @this.Title);
@@ -48,13 +48,13 @@ namespace Meetup.Domain.Tests
             return @this;
         }
 
-        public static Meetup Published(this Meetup @this) => @this.ExecuteCommand(@this.Publish);
+        public static MeetupAggregate Published(this MeetupAggregate @this) => @this.ExecuteCommand(@this.Publish);
 
-        public static Meetup Closed(this Meetup @this) => @this.ExecuteCommand(@this.Close);
+        public static MeetupAggregate Closed(this MeetupAggregate @this) => @this.ExecuteCommand(@this.Close);
 
-        public static Meetup Canceled(this Meetup @this) => @this.ExecuteCommand(@this.Cancel);
+        public static MeetupAggregate Canceled(this MeetupAggregate @this) => @this.ExecuteCommand(@this.Cancel);
 
-        private static Meetup ExecuteCommand(this Meetup @this, Action command)
+        private static MeetupAggregate ExecuteCommand(this MeetupAggregate @this, Action command)
         {
             @this.UpdateNumberOfSeats(SeatsNumber.From(numberOfSeats));
             @this.UpdateLocation(Address.From(address));

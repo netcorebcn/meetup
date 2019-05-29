@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Marten;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using MongoDB.Driver;
+using Polly;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace Meetup.Api
@@ -24,9 +25,9 @@ namespace Meetup.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            AddMongoDatabase();
+            AddEventStore();
+            services.AddScoped<IMeetupRepository, MeetupRepository>();
             services.AddScoped<MeetupApplicationService>();
-            services.AddScoped<IMeetupRepository, MeetupDbRepository>();
             services.AddControllers().AddNewtonsoftJson();
             services.AddSwaggerGen(c =>
             {
@@ -38,11 +39,17 @@ namespace Meetup.Api
                     });
             });
 
-            void AddMongoDatabase()
-            {
-                var client = new MongoClient(Configuration["mongodb"] ?? "mongodb://localhost");
-                services.AddScoped<IMongoDatabase>(_ => client.GetDatabase("meetup"));
-            }
+            void AddEventStore() =>
+                Retry(() => services.AddSingleton<IDocumentStore>(DocumentStore.For(_ =>
+                {
+                    _.Connection(Configuration["eventstore"] ?? "Host=localhost;Port=5432;Username=postgres;Password=changeit");
+                    _.Events.DatabaseSchemaName = "meetup";
+                })));
+
+            void Retry(Action action, int retries = 3) =>
+                Policy.Handle<Exception>()
+                    .WaitAndRetry(retries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
+                    .Execute(action);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

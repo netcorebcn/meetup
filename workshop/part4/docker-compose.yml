@@ -14,7 +14,7 @@ services:
     ports:
       - 8080:80
     environment: 
-      mongodb: mongodb://database
+      eventstore: "Host=eventstore;Username=postgres;Password=changeit"
 
   tests:
     image: meetup-tests 
@@ -25,9 +25,4 @@ services:
         main: ${MEETUP_INTEGRATION_TESTS}
     container_name: meetup-tests
     environment: 
-      meetupUrl: http://meetup/api/meetup/
-
-  database:
-    image: mongo 
-    ports:
-      - 27017:27017
+      meetupUrl: http://meetup/meetup/
