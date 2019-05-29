@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using static Meetup.Domain.Tests.MeetupProjectionTestExtensions;
@@ -19,12 +20,9 @@ namespace Meetup.Domain.Tests
                     .WhenMemberRejected(sara),
                 assert: readModel =>
                 {
-                    Assert.Equal(2, readModel.Going.Count);
-                    Assert.Equal(bob.memberId, readModel.Going.First());
-                    Assert.Equal(jon.memberId, readModel.Going.Last());
-
-                    Assert.Equal(carla.memberId, readModel.Waiting.Last());
-                    Assert.Equal(sara.memberId, readModel.NotGoing.Last());
+                    readModel.Going.AssertEqual(bob, jon);
+                    readModel.Waiting.AssertEqual(carla);
+                    readModel.NotGoing.AssertEqual(sara);
                 }
             );
 
@@ -39,13 +37,9 @@ namespace Meetup.Domain.Tests
                     .WhenMemberRejected(bob),
                 assert: readModel =>
                 {
-                    Assert.Equal(2, readModel.Going.Count);
+                    readModel.Going.AssertEqual(jon, carla);
+                    readModel.NotGoing.AssertEqual(bob);
                     Assert.Empty(readModel.Waiting);
-                    Assert.Single(readModel.NotGoing);
-
-                    Assert.Equal(jon.memberId, readModel.Going.First());
-                    Assert.Equal(carla.memberId, readModel.Going.Last());
-                    Assert.Equal(bob.memberId, readModel.NotGoing.Last());
                 }
             );
 
@@ -59,8 +53,7 @@ namespace Meetup.Domain.Tests
                     .WhenMemberAccepted(bob),
                 assert: readModel =>
                 {
-                    Assert.Equal(bob.memberId, readModel.Going.First());
-                    Assert.Single(readModel.Going);
+                    readModel.Going.AssertEqual(bob);
                     Assert.Empty(readModel.Waiting);
                     Assert.Empty(readModel.NotGoing);
                 }
@@ -75,8 +68,7 @@ namespace Meetup.Domain.Tests
                     .WhenMemberRejected(bob),
                 assert: readModel =>
                 {
-                    Assert.Single(readModel.NotGoing);
-                    Assert.Equal(bob.memberId, readModel.NotGoing.Last());
+                    readModel.NotGoing.AssertEqual(bob);
                     Assert.Empty(readModel.Going);
                     Assert.Empty(readModel.Waiting);
                 }
@@ -140,5 +132,7 @@ namespace Meetup.Domain.Tests
         }
 
         public static MeetupReadModel ReadModel(this MeetupProjection projection) => projection.Project();
+
+        public static void AssertEqual(this List<Guid> list, params (Guid memberId, DateTime at)[] guids) => Assert.Equal(guids.Select(x => x.memberId), list);
     }
 }
