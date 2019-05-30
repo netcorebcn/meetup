@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
@@ -16,17 +17,32 @@ namespace Meetup.IntegrationTests
         public static readonly string location = "SanFrancisco, MountainView";
         public static readonly DateTime start = DateTime.ParseExact("2019-08-01", "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-        public static async Task TestCase(
+        public static Task TestCase(
             this MeetupClient @this,
             Func<MeetupClient, Task<HttpResponseMessage>> command,
             Action<HttpResponseMessage> assertResponse = null,
-            Action<Meetup> assert = null)
+            Action<Meetup> assert = null) =>
+            Test(@this, command, assertResponse, assert, @this.Get);
+
+        public static Task TestAttendantsCase(
+            this MeetupClient @this,
+            Func<MeetupClient, Task<HttpResponseMessage>> command,
+            Action<HttpResponseMessage> assertResponse = null,
+            Action<Attendants> assert = null) =>
+            Test(@this, command, assertResponse, assert, @this.GetAttendants);
+
+        private static async Task Test<TResponse>(
+            this MeetupClient @this,
+            Func<MeetupClient, Task<HttpResponseMessage>> command,
+            Action<HttpResponseMessage> assertResponse,
+            Action<TResponse> assert,
+            Func<Guid, Task<TResponse>> get)
         {
             assert = assert ?? (_ => { });
             var response = await command(@this);
             assertResponse(response);
-            var meetup = await @this.Get(id);
-            assert(meetup);
+            var readModel = await get(id);
+            assert(readModel);
         }
 
         public static void AssertOk(HttpResponseMessage response) =>
@@ -108,5 +124,7 @@ namespace Meetup.IntegrationTests
             @this.UpdateTime(id, start, start.AddHours(2));
 
         public static async Task<Meetup> Get(this MeetupClient @this) => await @this.Get(id);
+
+        public static void AssertEqual(this List<Guid> list, params Guid[] guids) => Assert.Equal(guids, list);
     }
 }

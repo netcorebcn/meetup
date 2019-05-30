@@ -11,16 +11,12 @@ namespace Meetup.Api
 {
     public static class Queries
     {
-        public static async Task<MeetupReadModel> Query(this IDocumentStore eventStore, GetMeetup queryModel)
+        public static async Task<TReadModel> Query<TReadModel, TProjection>(this IDocumentStore eventStore, Guid id)
+            where TProjection : IProjection<TReadModel>, new()
         {
             using var session = eventStore.OpenSession();
-            var stream = await session.Events.FetchStreamAsync(queryModel.Id);
-            return new MeetupProjection().Project(stream.Select(@event => @event.Data).ToArray());
-        }
-
-        public class GetMeetup
-        {
-            public Guid Id { get; set; }
+            var stream = await session.Events.FetchStreamAsync(id);
+            return new TProjection().Project(stream.Select(@event => @event.Data).ToArray());
         }
     }
 }

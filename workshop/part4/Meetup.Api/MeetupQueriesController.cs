@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Marten;
+using Meetup.Domain;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Meetup.Api.Controllers
@@ -16,9 +17,16 @@ namespace Meetup.Api.Controllers
         public MeetupQueriesController(IDocumentStore eventStore) => _eventStore = eventStore;
 
         [HttpGet("{id}")]
-        public async Task<ActionResult> Get(Guid id)
+        public async Task<ActionResult> GetMeetup(Guid id)
         {
-            var result = await _eventStore.Query(new Queries.GetMeetup { Id = id });
+            var result = await _eventStore.Query<MeetupReadModel, MeetupProjection>(id);
+            return Ok(result);
+        }
+
+        [HttpGet("attendants/{id}")]
+        public async Task<ActionResult> GetAttendants(Guid id)
+        {
+            var result = await _eventStore.Query<AttendantsReadModel, AttendantsProjection>(id);
             return Ok(result);
         }
     }

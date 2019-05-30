@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -159,6 +160,32 @@ namespace Meetup.IntegrationTests
                 },
                 AssertOk,
                 m => Assert.True(m.MembersNotGoing.ContainsKey(memberId))
+            );
+        }
+
+        [Fact]
+        public async Task Given_Published_Meetup_When_SomeRSVP_Then_AttendantsProjectionUpdated()
+        {
+            var jon = Guid.NewGuid();
+            var sara = Guid.NewGuid();
+            var carla = Guid.NewGuid();
+            var at = DateTime.UtcNow;
+
+            await _client.TestAttendantsCase(
+                async c =>
+                {
+                    await c.Published();
+                    await c.AcceptRSVP(jon, at);
+                    await c.AcceptRSVP(sara, at.AddSeconds(1));
+                    return await c.RejectRSVP(carla, at.AddSeconds(1));
+                },
+                AssertOk,
+                m =>
+                {
+                    m.Going.AssertEqual(jon, sara);
+                    m.NotGoing.AssertEqual(carla);
+                    Assert.Empty(m.Waiting);
+                }
             );
         }
     }

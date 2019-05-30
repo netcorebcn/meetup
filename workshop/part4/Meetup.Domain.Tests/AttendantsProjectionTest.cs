@@ -7,7 +7,7 @@ using static Meetup.Domain.Tests.MeetupProjectionTestExtensions;
 #nullable enable
 namespace Meetup.Domain.Tests
 {
-    public class MeetupProjectionTest
+    public class AttendantsProjectionTest
     {
         [Fact]
         public void Given_ThreeGoing_When_Only_TwoSeats_Then_OneWaiting() =>

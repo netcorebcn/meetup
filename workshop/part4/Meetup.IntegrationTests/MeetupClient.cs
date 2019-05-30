@@ -90,13 +90,17 @@ namespace Meetup.IntegrationTests
                 Id = id,
             });
 
-        public async Task<Meetup> Get(Guid id)
+        public async Task<Meetup> Get(Guid id) => await Get<Meetup>(id);
+
+        public async Task<Attendants> GetAttendants(Guid id) => await Get<Attendants>(id, "attendants/");
+
+        public async Task<TResponse> Get<TResponse>(Guid id, string uri = "")
         {
-            var response = await _client.GetAsync($"{id}");
+            var response = await _client.GetAsync($"{uri}{id}");
             var log = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"Get RESPONSE: {log}");
             var content = await response.Content.ReadAsStringAsync();
-            return await response.Content.ReadAsAsync<Meetup>();
+            return await response.Content.ReadAsAsync<TResponse>();
         }
     }
 
@@ -119,5 +123,15 @@ namespace Meetup.IntegrationTests
             Canceled,
             Closed
         }
+    }
+
+    public class Attendants
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public List<Guid> Going { get; set; } = new List<Guid>();
+        public List<Guid> NotGoing { get; set; } = new List<Guid>();
+        public List<Guid> Waiting { get; set; } = new List<Guid>();
+        public int NumberOfSeats { get; set; }
     }
 }
