@@ -44,6 +44,7 @@ namespace Meetup.Api
                 {
                     _.Connection(Configuration["eventstore"] ?? "Host=localhost;Port=5432;Username=postgres;Password=changeit");
                     _.Events.DatabaseSchemaName = "meetup";
+                    _.DatabaseSchemaName = "meetup";
                 })));
 
             void Retry(Action action, int retries = 3) =>

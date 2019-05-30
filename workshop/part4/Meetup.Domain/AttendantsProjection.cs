@@ -6,14 +6,12 @@ namespace Meetup.Domain
 {
     public interface IProjection<TReadModel>
     {
-        TReadModel Project(params object[] events);
+        TReadModel Project(TReadModel readModel, params object[] events);
     }
 
     public class AttendantsProjection : IProjection<AttendantsReadModel>
     {
-        private readonly AttendantsReadModel readModel = new AttendantsReadModel();
-
-        public AttendantsReadModel Project(params object[] events) =>
+        public AttendantsReadModel Project(AttendantsReadModel readModel, params object[] events) =>
             events.Aggregate(readModel, When);
 
         private AttendantsReadModel When(AttendantsReadModel readModel, object @event)
@@ -38,6 +36,7 @@ namespace Meetup.Domain
                     UpdateWaitingList();
                     break;
             }
+
 
             return readModel;
 

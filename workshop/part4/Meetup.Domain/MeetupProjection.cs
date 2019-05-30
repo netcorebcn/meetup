@@ -6,9 +6,7 @@ namespace Meetup.Domain
 {
     public class MeetupProjection : IProjection<MeetupReadModel>
     {
-        private readonly MeetupReadModel readModel = new MeetupReadModel();
-
-        public MeetupReadModel Project(params object[] events) =>
+        public MeetupReadModel Project(MeetupReadModel readModel, object[] events) =>
             events.Aggregate(readModel, When);
 
         private MeetupReadModel When(MeetupReadModel readModel, object @event)

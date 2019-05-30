@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Marten;
 using Meetup.Domain;
+using Newtonsoft.Json;
 
 namespace Meetup.Api
 {
@@ -23,10 +24,29 @@ namespace Meetup.Api
         public async Task Save(MeetupAggregate meetup)
         {
             using var session = _eventStore.OpenSession();
-            var eventStreamState = await session.Events.FetchStreamStateAsync(meetup.Id.Value);
+            var eventStreamState = await session.Events.FetchStreamStateAsync(meetup.Id);
             var expectedVersion = (eventStreamState?.Version ?? 0) + meetup.Events.Count();
-            session.Events.Append(meetup.Id.Value, expectedVersion, meetup.Events.ToArray());
+            var pendingEvents = meetup.Events.ToArray();
+
+            session.Events.Append(meetup.Id, expectedVersion, pendingEvents);
+            await PersistProjections(session, meetup.Id, pendingEvents);
+
             await session.SaveChangesAsync();
+        }
+
+        private async Task PersistProjections(IDocumentSession session, Guid streamId, object[] events)
+        {
+            await PersistProjections<AttendantsReadModel, AttendantsProjection>(session, streamId, events);
+            await PersistProjections<MeetupReadModel, MeetupProjection>(session, streamId, events);
+        }
+
+        private async Task PersistProjections<TReadModel, TProjection>(IDocumentSession session, Guid streamId, object[] events)
+            where TProjection : IProjection<TReadModel>, new()
+            where TReadModel : new()
+        {
+            var readModel = (await session.LoadAsync<TReadModel>(streamId)) ?? new TReadModel();
+            var newReadModel = new TProjection().Project(readModel, events);
+            session.Store(newReadModel);
         }
     }
 }
