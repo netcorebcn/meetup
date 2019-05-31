@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EasyNetQ;
 using Marten;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -26,6 +27,10 @@ namespace Meetup.Api
         public void ConfigureServices(IServiceCollection services)
         {
             AddEventStore();
+            services
+                .AddAsyncMessaging(Configuration)
+                .WithTypesFromAssemblies(typeof(MeetupPublishedMessageHandler).Assembly);
+
             services.AddScoped<IMeetupRepository, MeetupRepository>();
             services.AddScoped<MeetupApplicationService>();
             services.AddControllers().AddNewtonsoftJson();

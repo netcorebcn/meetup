@@ -30,8 +30,22 @@ namespace Meetup.Api
 
             session.Events.Append(meetup.Id, expectedVersion, pendingEvents);
             await PersistProjections(session, meetup.Id, pendingEvents);
+            StoreOutboxEvents(session, meetup.Id, pendingEvents);
 
             await session.SaveChangesAsync();
+        }
+
+        private void StoreOutboxEvents(IDocumentSession session, MeetupId id, object[] pendingEvents)
+        {
+            session.Store<OutboxEvent>(pendingEvents.Select(ev => new OutboxEvent
+            {
+                Id = Guid.NewGuid(),
+                StreamId = id,
+                Data = ev,
+                EventType = ev.GetType().Name,
+                ClrEventType = ev.GetType().FullName
+
+            }).ToArray());
         }
 
         private async Task PersistProjections(IDocumentSession session, Guid streamId, object[] events)

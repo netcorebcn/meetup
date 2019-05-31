@@ -23,9 +23,7 @@ namespace Meetup.Api
         public static async Task<TReadModel> Query<TReadModel>(this IDocumentStore eventStore, Guid id)
         {
             using var session = eventStore.OpenSession();
-            var result = await session.LoadAsync<TReadModel>(id);
-            Console.WriteLine($"QUERY!!!!!!!!!!!!!!!! {JsonConvert.SerializeObject(result)}, Type {typeof(TReadModel).Name} For Id {id}");
-            return result;
+            return await session.LoadAsync<TReadModel>(id);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Meetup.IntegrationTests
         public MeetupClient(HttpClient client, IConfiguration configuration)
         {
             _client = client;
-            client.BaseAddress = new Uri(configuration["meetupUrl"] ?? "http://localhost:5000/meetup/");
+            client.BaseAddress = new Uri(configuration["meetupUrl"] ?? "http://localhost:8002/meetup/");
         }
 
         public Task<HttpResponseMessage> Create(Guid id, string title) =>

@@ -2,11 +2,6 @@
 version: "3.6"
 
 services:
-  database:
-    image: mongo 
-    ports:
-      - 27017:27017
-
   eventstore:
     image: postgres
     ports:
@@ -14,3 +9,9 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: changeit
+
+  messagebroker-test:
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
