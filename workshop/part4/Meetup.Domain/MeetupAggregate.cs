@@ -8,18 +8,14 @@ namespace Meetup.Domain
 {
     public class MeetupAggregate
     {
+        private MeetupTitle Title = MeetupTitle.None;
+        private Address Location = Address.None;
+        private SeatsNumber NumberOfSeats = SeatsNumber.None;
+        private DateTimeRange TimeRange = DateTimeRange.None;
+        private MeetupState State = MeetupState.Created;
         public MeetupId Id { get; private set; } = MeetupId.None;
-        public MeetupTitle Title { get; private set; } = MeetupTitle.None;
-        public Address Location { get; private set; } = Address.None;
-        public SeatsNumber NumberOfSeats { get; private set; } = SeatsNumber.None;
-        public DateTimeRange TimeRange { get; private set; } = DateTimeRange.None;
-        public MeetupState State { get; private set; } = MeetupState.Created;
         private readonly List<object> _events = new List<object>();
         public IEnumerable<object> Events => _events.AsEnumerable();
-        private readonly Dictionary<MemberId, DateTime> _membersGoing = new Dictionary<MemberId, DateTime>();
-        public IReadOnlyDictionary<MemberId, DateTime> MembersGoing => _membersGoing;
-        private readonly Dictionary<MemberId, DateTime> _membersNotGoing = new Dictionary<MemberId, DateTime>();
-        public IReadOnlyDictionary<MemberId, DateTime> MembersNotGoing => _membersNotGoing;
 
         public static MeetupAggregate Build(MeetupId id, params object[] events)
         {
@@ -37,7 +33,6 @@ namespace Meetup.Domain
 
         public MeetupAggregate(MeetupId id, MeetupTitle title) =>
             Apply(new Events.MeetupCreated(id, title));
-
 
         public void UpdateNumberOfSeats(SeatsNumber number) =>
             Apply(new Events.MeetupNumberOfSeatsUpdated(Id, number));
@@ -95,12 +90,6 @@ namespace Meetup.Domain
                     break;
                 case Events.MeetupLocationUpdated ev:
                     Location = Address.From(ev.Location);
-                    break;
-                case Events.RSVPAccepted ev:
-                    _membersGoing.Add(MemberId.From(ev.MemberId), ev.AcceptedAt);
-                    break;
-                case Events.RSVPRejected ev:
-                    _membersNotGoing.Add(MemberId.From(ev.MemberId), ev.RejectedAt);
                     break;
             }
         }

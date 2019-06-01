@@ -13,38 +13,42 @@ namespace Meetup.Domain.Tests
         [Fact]
         public void Given_Created_Meetup_When_Create_Then_Created()
         {
-            var meetup = CreateMeetup().AssertProperties();
-
+            var meetup = CreateMeetup();
             meetup.UpdateTitle(MeetupTitle.From("CQRS with Postgres"));
-            Assert.Equal("CQRS with Postgres", meetup.Title);
-
             meetup.UpdateLocation(Address.From(address));
-            Assert.Equal(address, meetup.Location);
-
             meetup.UpdateNumberOfSeats(SeatsNumber.From(numberOfSeats));
-            Assert.Equal(numberOfSeats, meetup.NumberOfSeats);
-
             meetup.UpdateTime(timeRange);
-            Assert.Equal(timeRange, meetup.TimeRange);
+
+            var events = meetup.Events.ToArray();
+            events[0].AssertEvent<Events.MeetupCreated>(
+                ev => Assert.Equal(id, ev.Id));
+            events[1].AssertEvent<Events.MeetupTitleUpdated>(
+                ev => Assert.Equal("CQRS with Postgres", ev.Title));
+            events[2].AssertEvent<Events.MeetupLocationUpdated>(
+                ev => Assert.Equal(address, ev.Location));
+            events[3].AssertEvent<Events.MeetupNumberOfSeatsUpdated>(
+                ev => Assert.Equal(numberOfSeats, ev.NumberOfSeats));
+            events[4].AssertEvent<Events.MeetupTimeUpdated>(
+                ev => Assert.Equal(timeRange, DateTimeRange.From(ev.Start, ev.End)));
         }
 
         [Fact]
         public void Given_Valid_Meetup_When_Publish_Then_Published()
         {
-            var meetup = CreateMeetup().AssertProperties();
+            var meetup = CreateMeetup();
 
             meetup.UpdateNumberOfSeats(SeatsNumber.From(numberOfSeats));
             meetup.UpdateLocation(Address.From(address));
             meetup.UpdateTime(timeRange);
-
             meetup.Publish();
-            Assert.Equal(MeetupState.Published, meetup.State);
+
+            meetup.Events.Last().AssertEvent<Events.MeetupPublished>();
         }
 
         [Fact]
         public void Given_Invalid_Meetup_When_Publish_Then_Throws()
         {
-            var meetup = CreateMeetup().AssertProperties();
+            var meetup = CreateMeetup();
             Assert.Throws<MeetupDomainException>(() => meetup.Publish());
         }
 
@@ -53,7 +57,8 @@ namespace Meetup.Domain.Tests
         {
             var meetup = CreateMeetup().Published();
             meetup.Cancel();
-            Assert.Equal(MeetupState.Canceled, meetup.State);
+
+            meetup.Events.Last().AssertEvent<Events.MeetupCanceled>();
         }
 
         [Fact]
@@ -64,14 +69,14 @@ namespace Meetup.Domain.Tests
         public void Given_Published_Meetup_When_Close_Then_Closed()
         {
             var meetup = CreateMeetup().Published().Closed();
-            Assert.Equal(MeetupState.Closed, meetup.State);
+            meetup.Events.Last().AssertEvent<Events.MeetupClosed>();
         }
 
         [Fact]
         public void Given_Published_Meetup_When_Publish_Then_Nothing()
         {
             var meetup = CreateMeetup().Published().Published();
-            Assert.Equal(MeetupState.Published, meetup.State);
+            meetup.Events.Last().AssertEvent<Events.MeetupPublished>();
         }
 
         [Fact]
@@ -94,42 +99,32 @@ namespace Meetup.Domain.Tests
 
         [Fact]
         public void Given_Nothing_When_Create_Meetup_Then_Created() =>
-            GivenNothing<Events.MeetupCreated>(
-                CreateMeetup,
-                (m, ev) => Assert.Equal(MeetupState.Created, m.State));
+            GivenNothingThen<Events.MeetupCreated>(when: CreateMeetup);
 
         [Fact]
         public void Given_Created_Meetup_When_Publish_Then_Published() =>
-            GivenPublishedMeetup<Events.MeetupPublished>(
-                (m, ev) => Assert.Equal(MeetupState.Published, m.State));
+            GivenPublishedMeetupThen<Events.MeetupPublished>();
 
         [Fact]
         public void Given_Published_Meetup_When_UpdateSeats_Then_SeatsUpdated() =>
-            GivenPublishedMeetup<Events.MeetupNumberOfSeatsUpdated>(
-                m => m.UpdateNumberOfSeats(SeatsNumber.From(25)),
-                (m, ev) => Assert.Equal(m.NumberOfSeats, ev.NumberOfSeats));
+            GivenPublishedMeetupThen<Events.MeetupNumberOfSeatsUpdated>(
+                when: m => m.UpdateNumberOfSeats(SeatsNumber.From(25)),
+                assert: ev => Assert.Equal(25, ev.NumberOfSeats));
 
         [Fact]
         public void Given_Published_Meetup_When_AcceptRSVP_Then_MemberGoing()
         {
             var memberId = MemberId.From(Guid.NewGuid());
             var acceptedAt = DateTime.UtcNow;
-
-            GivenPublishedMeetup<Events.RSVPAccepted>(
-                cmd => cmd.AcceptRSVP(memberId, acceptedAt),
-                (m, ev) => Assert.Equal(acceptedAt, m.MembersGoing[memberId]));
+            GivenPublishedMeetupThen<Events.RSVPAccepted>(when: m => m.AcceptRSVP(memberId, acceptedAt));
         }
-
 
         [Fact]
         public void Given_Published_Meetup_When_RejectRSVP_Then_MemberNotGoing()
         {
             var memberId = MemberId.From(Guid.NewGuid());
             var rejectedAt = DateTime.UtcNow;
-
-            GivenPublishedMeetup<Events.RSVPRejected>(
-                cmd => cmd.RejectRSVP(memberId, rejectedAt),
-                (m, ev) => Assert.Equal(rejectedAt, m.MembersNotGoing[memberId]));
+            GivenPublishedMeetupThen<Events.RSVPRejected>(when: m => m.RejectRSVP(memberId, rejectedAt));
         }
 
         [Fact]
