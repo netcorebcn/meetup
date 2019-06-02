@@ -1,0 +1,20 @@
+
+version: "3.6"
+
+services:
+  eventstore:
+    image: eventstore/eventstore 
+    ports:
+      - "2113:2113"
+      - "1113:1113"
+
+  projectionstore:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  messagebroker-test:
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"

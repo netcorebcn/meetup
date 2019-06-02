@@ -1,0 +1,28 @@
+version: "3.6"
+
+services:
+  meetup:
+    image: ${REGISTRY}/meetup:${TAG}
+    build:
+      dockerfile: ${MEETUP_API}Dockerfile
+      context: .
+      args:
+        api: ${MEETUP_API}
+        domain: ${MEETUP_DOMAIN}
+        tests: ${MEETUP_TESTS}
+    container_name: meetup
+    ports:
+      - 8080:80
+    environment: 
+      eventstore: "Host=eventstore;Username=postgres;Password=changeit"
+
+  tests:
+    image: meetup-tests 
+    build:
+      dockerfile: ${MEETUP_INTEGRATION_TESTS}Dockerfile
+      context: .
+      args:
+        main: ${MEETUP_INTEGRATION_TESTS}
+    container_name: meetup-tests
+    environment: 
+      meetupUrl: http://meetup/meetup/
