@@ -9,11 +9,10 @@ using Meetup.Domain;
 
 namespace Meetup.Api
 {
-    internal class EventStoreRepository
+    internal class EventStoreRepository : IEventStoreRepository
     {
         public static readonly string EventClrTypeHeader = "EventClrTypeName";
         public static readonly string AggregateClrTypeHeader = "AggregateClrTypeName";
-        public static readonly string CommitIdHeader = "CommitId";
         private const int ReadPageSize = 500;
 
         private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None };
@@ -24,6 +23,41 @@ namespace Meetup.Api
         {
             _eventStoreConnection = eventStoreConnection;
             _eventDeserializer = eventDeserializer;
+        }
+
+        public async Task<TAggregate> Get<TAggregate, TId>(TId id) where TAggregate : Aggregate<TId>
+        {
+            var aggregate = (TAggregate)Activator.CreateInstance(typeof(TAggregate), true);
+            var eventStream = await GetEventStream<TAggregate, TId>(id);
+            aggregate.Load(eventStream.ToArray());
+            return aggregate;
+        }
+
+        public async Task Save<TAggregate, TId>(TAggregate aggregate) where TAggregate : Aggregate<TId>
+        {
+            var streamName = StreamName($"{aggregate.GetType().Name }-{aggregate.Id}");
+            var eventsToSave = aggregate.Events.Select(
+                ev => ToEventData(
+                    Guid.NewGuid(),
+                    ev,
+                    new Dictionary<string, string> {
+                        { AggregateClrTypeHeader, aggregate.GetType().AssemblyQualifiedName }
+                    }));
+
+            await _eventStoreConnection.AppendToStreamAsync(streamName, aggregate.Version, eventsToSave);
+            aggregate.ClearPendingEvents();
+
+            EventData ToEventData(Guid eventId, object evnt, IDictionary<string, string> headers)
+            {
+                var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(evnt, SerializerSettings));
+                var eventHeaders = new Dictionary<string, string>(headers)
+                {
+                    {EventClrTypeHeader, evnt.GetType().AssemblyQualifiedName}
+                };
+                var metadata = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventHeaders, SerializerSettings));
+                var typeName = evnt.GetType().Name;
+                return new EventData(eventId, typeName, true, data, metadata);
+            }
         }
 
         public async Task<IEnumerable<object>> GetEventStream<TAggregate, TId>(TId id) where TAggregate : Aggregate<TId>
@@ -54,41 +88,6 @@ namespace Meetup.Api
             } while (!currentSlice.IsEndOfStream);
 
             return eventStream;
-        }
-
-        public async Task<TAggregate> Get<TAggregate, TId>(TId id) where TAggregate : Aggregate<TId>
-        {
-            var aggregate = (TAggregate)Activator.CreateInstance(typeof(TAggregate), true);
-            var eventStream = await GetEventStream<TAggregate, TId>(id);
-            aggregate.Load(eventStream);
-            return aggregate;
-        }
-
-        public async Task Save<TAggregate, TId>(TAggregate aggregate) where TAggregate : Aggregate<TId>
-        {
-            var streamName = StreamName($"{aggregate.GetType().Name }-{aggregate.Id}");
-            var eventsToSave = aggregate.Events.Select(
-                ev => ToEventData(
-                    Guid.NewGuid(),
-                    ev,
-                    new Dictionary<string, string> {
-                        { AggregateClrTypeHeader, aggregate.GetType().AssemblyQualifiedName }
-                    }));
-
-            await _eventStoreConnection.AppendToStreamAsync(streamName, aggregate.Version, eventsToSave);
-            aggregate.ClearPendingEvents();
-
-            EventData ToEventData(Guid eventId, object evnt, IDictionary<string, string> headers)
-            {
-                var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(evnt, SerializerSettings));
-                var eventHeaders = new Dictionary<string, string>(headers)
-                {
-                    {EventClrTypeHeader, evnt.GetType().AssemblyQualifiedName}
-                };
-                var metadata = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventHeaders, SerializerSettings));
-                var typeName = evnt.GetType().Name;
-                return new EventData(eventId, typeName, true, data, metadata);
-            }
         }
 
         private string StreamName(string streamName)

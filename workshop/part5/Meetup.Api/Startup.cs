@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EasyNetQ;
+using Meetup.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -25,12 +26,14 @@ namespace Meetup.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddEventSourcing(Configuration);
+            services
+                .AddEventSourcing(Configuration)
+                .WithEventsFrom(typeof(Events.MeetupCreated).Assembly);
+
             services
                 .AddAsyncMessaging(Configuration)
                 .WithTypesFromAssemblies(typeof(MeetupPublishedMessageHandler).Assembly);
 
-            services.AddScoped<IMeetupRepository, MeetupRepository>();
             services.AddScoped<MeetupApplicationService>();
             services.AddControllers().AddNewtonsoftJson();
             services.AddSwaggerGen(c =>

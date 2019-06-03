@@ -7,9 +7,9 @@ namespace Meetup.Api
 {
     public class MeetupApplicationService
     {
-        private readonly IMeetupRepository _repo;
+        private readonly IEventStoreRepository _repo;
 
-        public MeetupApplicationService(IMeetupRepository repo) => _repo = repo;
+        public MeetupApplicationService(IEventStoreRepository repo) => _repo = repo;
 
         public Task Handle(object command) =>
             command switch
@@ -60,14 +60,14 @@ namespace Meetup.Api
 
         private async Task ExecuteCommand(Guid id, Action<MeetupAggregate> command)
         {
-            var meetup = await _repo.Get(id);
+            var meetup = await _repo.Get<MeetupAggregate, MeetupId>(MeetupId.From(id));
             if (meetup == null)
             {
                 meetup = Aggregate<MeetupId>.Build<MeetupAggregate>();
             }
 
             command(meetup);
-            await _repo.Save(meetup);
+            await _repo.Save<MeetupAggregate, MeetupId>(meetup);
         }
     }
 }

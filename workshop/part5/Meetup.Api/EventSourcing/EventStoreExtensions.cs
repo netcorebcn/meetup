@@ -8,20 +8,20 @@ namespace Meetup.Api
 {
     public static class EventSourcingServiceCollectionExtension
     {
-        public static IServiceCollection AddEventSourcing(this IServiceCollection services, IConfiguration configuration)
+        public static EventDeserializer AddEventSourcing(this IServiceCollection services, IConfiguration configuration)
         {
-            var esConnection = EventStoreConnection.Create(configuration["eventstore"], ConnectionSettings.Create().KeepReconnecting());
+            var esConnection = EventStoreConnection.Create(
+                configuration["eventstore"] ?? "ConnectTo=tcp://admin:changeit@localhost:1113; DefaultUserCredentials=admin:changeit;",
+                ConnectionSettings.Create().KeepReconnecting());
 
-            // var eventDeserializer = new EventDeserializer(typeof(TAggregateRoot).GetTypeInfo().Assembly);
-            // var projections = new EventStoreProjectionsClient(options);
+            var eventDeserializer = new EventDeserializer();
 
             services.AddSingleton(esConnection);
+            services.AddSingleton(eventDeserializer);
+            services.AddScoped<IEventStoreRepository, EventStoreRepository>();
             services.AddHostedService<EventStoreService>();
-            // services.AddSingleton(eventDeserializer);
-            // services.AddSingleton<IEventStoreProjections>(projections);
 
-
-            return services;
+            return eventDeserializer;
         }
     }
 }
