@@ -18,6 +18,7 @@ namespace Meetup.Api
 
             services.AddSingleton(esConnection);
             services.AddSingleton(eventDeserializer);
+            services.AddSingleton<IEventStoreBus, EventStoreSubscription>();
             services.AddScoped<IEventStoreRepository, EventStoreRepository>();
             services.AddHostedService<EventStoreService>();
 

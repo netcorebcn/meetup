@@ -1,8 +1,6 @@
 
 using System;
 using System.Threading.Tasks;
-using EasyNetQ;
-using EasyNetQ.NonGeneric;
 using Microsoft.Extensions.Logging;
 using Polly;
 
@@ -10,7 +8,7 @@ namespace Meetup.Api
 {
     public class MessageDispatcherService
     {
-        private readonly IBus _bus;
+        private readonly IEventStoreBus _bus;
         private readonly string _subscription;
         private readonly MessageHandlerRegistry _registry;
         private readonly MessageHandlerFactory _factory;
@@ -19,7 +17,7 @@ namespace Meetup.Api
         public MessageDispatcherService(MessageHandlerFactory factory,
             MessageHandlerRegistry registry,
             AsyncMessagingOptions options,
-            IBus bus,
+            IEventStoreBus bus,
             ILogger<MessageDispatcherService> logger)
         {
             _bus = bus;
@@ -32,21 +30,21 @@ namespace Meetup.Api
         public void Start()
         {
             var serviceProvider = _factory.CreateBuilder();
-
             foreach (var subscription in _registry)
             {
                 foreach (var handlerType in subscription.Value)
                 {
-                    _logger.LogInformation($"Subscribing {handlerType} to messsage {subscription.Key}");
+                    _logger.LogDebug($"Subscribing {handlerType} to messsage {subscription.Key}");
                     Retry(() => Subscribe(subscription.Key, handlerType));
                 }
             }
 
             void Subscribe(Type messageType, Type messageHandlerType)
             {
-                _bus.SubscribeAsync(messageType, _subscription,
+                _bus.Subscribe(messageType, _subscription,
                 async (object msg) =>
                 {
+                    _logger.LogDebug($"Handling event type {messageType}");
                     dynamic handler = (IMessageHandler)serviceProvider.GetService(messageHandlerType);
                     await handler.Handle((dynamic)msg);
                 });
@@ -57,7 +55,5 @@ namespace Meetup.Api
                 .WaitAndRetry(retries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
                 .Execute(action);
         }
-
-        public void Stop() => _bus.Dispose();
     }
 }
