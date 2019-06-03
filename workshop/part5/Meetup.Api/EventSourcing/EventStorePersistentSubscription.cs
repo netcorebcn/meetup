@@ -8,14 +8,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Meetup.Api
 {
-    internal class EventStoreSubscription : IEventStoreBus
+    internal class EventStorePersistentSubscription : IEventStoreBus
     {
         private readonly IEventStoreConnection _conn;
         private readonly EventDeserializer _eventDeserializer;
         private readonly UserCredentials _credentials;
-        private readonly ILogger<EventStoreSubscription> _logger;
+        private readonly ILogger<EventStorePersistentSubscription> _logger;
 
-        public EventStoreSubscription(IEventStoreConnection conn, IConfiguration config, EventDeserializer eventDeserializer, ILogger<EventStoreSubscription> logger)
+        public EventStorePersistentSubscription(IEventStoreConnection conn, IConfiguration config, EventDeserializer eventDeserializer, ILogger<EventStorePersistentSubscription> logger)
         {
             _conn = conn;
             _eventDeserializer = eventDeserializer;

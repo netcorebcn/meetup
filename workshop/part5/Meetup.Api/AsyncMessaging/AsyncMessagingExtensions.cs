@@ -38,7 +38,7 @@ namespace Meetup.Api
     {
         public static IMessageHandlerBuilder AddAsyncMessaging(this IServiceCollection services, IConfiguration configuration)
         {
-            var subscription = configuration.GetValue("subscription", "default");
+            var subscription = configuration.GetValue("subscription_name", "default");
             var options = new AsyncMessagingOptions { Subscription = subscription };
             var registry = new MessageHandlerRegistry();
             var factory = new MessageHandlerFactory(services);

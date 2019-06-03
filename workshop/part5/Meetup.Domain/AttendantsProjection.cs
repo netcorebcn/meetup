@@ -14,6 +14,7 @@ namespace Meetup.Domain
         public AttendantsReadModel Project(AttendantsReadModel readModel, params object[] events) =>
             events.Aggregate(readModel, When);
 
+
         private AttendantsReadModel When(AttendantsReadModel readModel, object @event)
         {
             switch (@event)
@@ -36,7 +37,6 @@ namespace Meetup.Domain
                     UpdateWaitingList();
                     break;
             }
-
 
             return readModel;
 
