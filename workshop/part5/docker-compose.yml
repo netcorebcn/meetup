@@ -14,11 +14,11 @@ services:
     ports:
       - 8080:80
     environment: 
-      eventstore: "ConnectTo=tcp://admin:changeit@localhost:1113; DefaultUserCredentials=admin:changeit;"
+      eventstore: "ConnectTo=tcp://admin:changeit@eventstore:1113; DefaultUserCredentials=admin:changeit;"
+      projectionstore: "mongodb://projectionstore"
       subscription_name: "meetup"
       subscription_user: "admin"
       subscription_password: "changeit"
-      projectionstore: "mongodb://projectionstore"
 
   tests:
     image: meetup-tests 
