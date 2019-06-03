@@ -83,13 +83,13 @@ namespace Meetup.Domain
 
         public class RSVPAccepted
         {
-            public Guid MeetupId { get; }
+            public Guid Id { get; }
             public Guid MemberId { get; }
             public DateTime AcceptedAt { get; }
 
-            public RSVPAccepted(Guid meetupId, Guid memberId, DateTime acceptedAt)
+            public RSVPAccepted(Guid id, Guid memberId, DateTime acceptedAt)
             {
-                MeetupId = meetupId;
+                Id = id;
                 MemberId = memberId;
                 AcceptedAt = acceptedAt;
             }
@@ -97,13 +97,13 @@ namespace Meetup.Domain
 
         public class RSVPRejected
         {
-            public Guid MeetupId { get; }
+            public Guid Id { get; }
             public Guid MemberId { get; }
             public DateTime RejectedAt { get; }
 
-            public RSVPRejected(Guid meetupId, Guid memberId, DateTime rejectedAt)
+            public RSVPRejected(Guid id, Guid memberId, DateTime rejectedAt)
             {
-                MeetupId = meetupId;
+                Id = id;
                 MemberId = memberId;
                 RejectedAt = rejectedAt;
             }

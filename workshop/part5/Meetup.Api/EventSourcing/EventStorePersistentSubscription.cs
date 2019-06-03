@@ -13,6 +13,7 @@ namespace Meetup.Api
         private readonly IEventStoreConnection _conn;
         private readonly EventDeserializer _eventDeserializer;
         private readonly UserCredentials _credentials;
+
         private readonly ILogger<EventStorePersistentSubscription> _logger;
 
         public EventStorePersistentSubscription(IEventStoreConnection conn, IConfiguration config, EventDeserializer eventDeserializer, ILogger<EventStorePersistentSubscription> logger)
@@ -28,7 +29,7 @@ namespace Meetup.Api
             var eventTypeStream = $"$et-{eventType.Name}";
             var settings = PersistentSubscriptionSettings.Create().ResolveLinkTos().StartFromCurrent();
 
-            _logger.LogWarning($"Subscribing to {eventTypeStream} with {_credentials.Username}:{_credentials.Password}");
+            _logger.LogDebug($"Subscribing to {eventTypeStream} with {_credentials.Username}:{_credentials.Password}");
 
             await CreateSubscription(subscription, eventTypeStream, settings);
 

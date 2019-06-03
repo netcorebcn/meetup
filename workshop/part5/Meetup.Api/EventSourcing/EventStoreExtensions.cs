@@ -3,6 +3,7 @@ using System.Reflection;
 using EventStore.ClientAPI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace Meetup.Api
@@ -15,12 +16,14 @@ namespace Meetup.Api
                 configuration["eventstore"] ?? "ConnectTo=tcp://admin:changeit@localhost:1113; DefaultUserCredentials=admin:changeit;",
                 ConnectionSettings.Create().KeepReconnecting());
 
+            var serviceProvider = services.BuildServiceProvider();
             var eventDeserializer = new EventDeserializer();
             var subscriptionManager = new SubscriptionManager(
                 esConnection,
                 eventDeserializer,
                 configuration,
-                new AttendantsMongoProjection(GetMongoDb));
+                serviceProvider.GetRequiredService<ILogger<SubscriptionManager>>(),
+                new AttendantsMongoProjection(GetMongoDb, serviceProvider.GetRequiredService<ILogger<AttendantsMongoProjection>>()));
 
             services.AddSingleton(esConnection);
             services.AddSingleton(eventDeserializer);
