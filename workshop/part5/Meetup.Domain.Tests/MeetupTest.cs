@@ -163,8 +163,7 @@ namespace Meetup.Domain.Tests
         public void Given_ValidEvents_When_Build_Then_Built()
         {
             var id = MeetupId.From(Guid.NewGuid());
-            var meetup = MeetupAggregate.Build(
-                id,
+            var meetup = Aggregate<MeetupId>.Build<MeetupAggregate>(
                 new Events.MeetupCreated(id, "EventSourcing with Marten"),
                 new Events.MeetupNumberOfSeatsUpdated(id, 10),
                 new Events.MeetupLocationUpdated(id, "Barcelona"),
@@ -173,21 +172,6 @@ namespace Meetup.Domain.Tests
             );
 
             Assert.Equal(id, meetup.Id);
-        }
-
-        [Fact]
-        public void Given_Invalid_EvenStream_When_Build_Then_Throws()
-        {
-            var id = MeetupId.From(Guid.NewGuid());
-            Assert.Throws<MeetupDomainException>(() =>
-                MeetupAggregate.Build(
-                    id,
-                    new Events.MeetupCreated(id, "EventSourcing with Marten"),
-                    new Events.MeetupNumberOfSeatsUpdated(id, 10),
-                    new Events.MeetupLocationUpdated(id, "Barcelona"),
-                    new Events.MeetupPublished(id),
-                    new Events.MeetupTimeUpdated(id, DateTime.UtcNow, DateTime.UtcNow.AddHours(2))
-            ));
         }
     }
 }

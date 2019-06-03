@@ -39,9 +39,12 @@ namespace Meetup.Domain.Tests
             }
         }
 
-        public static MeetupAggregate CreateMeetup() => new MeetupAggregate(
-            MeetupId.From(id),
-            MeetupTitle.From(title));
+        public static MeetupAggregate CreateMeetup()
+        {
+            var meetup = Aggregate<MeetupId>.Build<MeetupAggregate>();
+            meetup.Create(MeetupId.From(id), MeetupTitle.From(title));
+            return meetup;
+        }
 
         public static MeetupAggregate Published(this MeetupAggregate @this) => @this.ExecuteCommand(@this.Publish);
 

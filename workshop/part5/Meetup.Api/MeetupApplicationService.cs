@@ -15,8 +15,9 @@ namespace Meetup.Api
             command switch
             {
                 Meetups.V1.Create cmd =>
-                    _repo.Save(new MeetupAggregate(
-                        MeetupId.From(cmd.Id),
+                    ExecuteCommand(
+                        cmd.Id,
+                        meetup => meetup.Create(MeetupId.From(cmd.Id),
                         MeetupTitle.From(cmd.Title))),
                 Meetups.V1.UpdateTitle cmd =>
                     ExecuteCommand(
@@ -59,20 +60,14 @@ namespace Meetup.Api
 
         private async Task ExecuteCommand(Guid id, Action<MeetupAggregate> command)
         {
-            var meetup = await GetMeetup(id);
-            command(meetup);
-            await _repo.Save(meetup);
-        }
-
-        private async Task<MeetupAggregate> GetMeetup(Guid id)
-        {
             var meetup = await _repo.Get(id);
             if (meetup == null)
             {
-                throw new Exception($"Meetup not found, id {id}");
+                meetup = Aggregate<MeetupId>.Build<MeetupAggregate>();
             }
 
-            return meetup;
+            command(meetup);
+            await _repo.Save(meetup);
         }
     }
 }

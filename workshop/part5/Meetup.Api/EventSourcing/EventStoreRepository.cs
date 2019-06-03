@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EventStore.ClientAPI;
 using Newtonsoft.Json;
+using Meetup.Domain;
 
 namespace Meetup.Api
 {
@@ -13,8 +14,6 @@ namespace Meetup.Api
         public static readonly string EventClrTypeHeader = "EventClrTypeName";
         public static readonly string AggregateClrTypeHeader = "AggregateClrTypeName";
         public static readonly string CommitIdHeader = "CommitId";
-        public static readonly string ServerClockHeader = "ServerClock";
-        private const int WritePageSize = 500;
         private const int ReadPageSize = 500;
 
         private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None };
@@ -27,7 +26,7 @@ namespace Meetup.Api
             _eventDeserializer = eventDeserializer;
         }
 
-        public async Task<IEnumerable<object>> GetEventStream<TAggregate>(Guid id) where TAggregate : AggregateRoot, new()
+        public async Task<IEnumerable<object>> GetEventStream<TAggregate, TId>(TId id) where TAggregate : Aggregate<TId>
         {
             var streamName = StreamName($"{typeof(TAggregate).Name }-{id}");
 
@@ -57,105 +56,45 @@ namespace Meetup.Api
             return eventStream;
         }
 
-        public async Task<TAggregate> Get<TAggregate>(Guid id) where TAggregate : AggregateRoot, new()
+        public async Task<TAggregate> Get<TAggregate, TId>(TId id) where TAggregate : Aggregate<TId>
         {
-            var aggregate = (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
-
-            var eventStream = await GetEventStream<TAggregate>(id);
-            eventStream.ToList().ForEach(@event => aggregate.ApplyEvent(@event));
+            var aggregate = (TAggregate)Activator.CreateInstance(typeof(TAggregate), true);
+            var eventStream = await GetEventStream<TAggregate, TId>(id);
+            aggregate.Load(eventStream);
             return aggregate;
         }
 
-        public async Task<int> Save(AggregateRoot aggregate, bool concurrencyCheck = true)
+        public async Task Save<TAggregate, TId>(TAggregate aggregate) where TAggregate : Aggregate<TId>
         {
             var streamName = StreamName($"{aggregate.GetType().Name }-{aggregate.Id}");
+            var eventsToSave = aggregate.Events.Select(
+                ev => ToEventData(
+                    Guid.NewGuid(),
+                    ev,
+                    new Dictionary<string, string> {
+                        { AggregateClrTypeHeader, aggregate.GetType().AssemblyQualifiedName }
+                    }));
 
-            var pendingEvents = aggregate.GetPendingEvents();
-            var originalVersion = concurrencyCheck ? aggregate.Version - pendingEvents.Count : ExpectedVersion.Any;
-
-            WriteResult result;
-
-            var commitHeaders = CreateCommitHeaders(aggregate);
-            var eventsToSave = pendingEvents.Select(x => ToEventData(Guid.NewGuid(), x, commitHeaders));
-
-            var eventBatches = GetEventBatches(eventsToSave);
-
-            if (eventBatches.Count == 1)
-            {
-                // If just one batch write them straight to the Event Store
-                result = await _eventStoreConnection.AppendToStreamAsync(streamName, originalVersion, eventBatches[0]);
-            }
-            else
-            {
-                // If we have more events to save than can be done in one batch according to the WritePageSize, then we need to save them in a transaction to ensure atomicity
-                using (var transaction = await _eventStoreConnection.StartTransactionAsync(streamName, originalVersion))
-                {
-                    foreach (var batch in eventBatches)
-                    {
-                        await transaction.WriteAsync(batch);
-                    }
-
-                    result = await transaction.CommitAsync();
-                }
-            }
-
+            await _eventStoreConnection.AppendToStreamAsync(streamName, aggregate.Version, eventsToSave);
             aggregate.ClearPendingEvents();
-            return (int)result.NextExpectedVersion;
-        }
 
-        private IList<IList<EventData>> GetEventBatches(IEnumerable<EventData> events) =>
-            events.Batch(WritePageSize).Select(x => (IList<EventData>)x.ToList()).ToList();
-
-        private static IDictionary<string, string> CreateCommitHeaders(AggregateRoot aggregate) =>
-            new Dictionary<string, string>
+            EventData ToEventData(Guid eventId, object evnt, IDictionary<string, string> headers)
             {
-                {CommitIdHeader, Guid.NewGuid().ToString()},
-                {AggregateClrTypeHeader, aggregate.GetType().AssemblyQualifiedName},
-                {ServerClockHeader, DateTime.UtcNow.ToString("o")}
-            };
-
-        private static EventData ToEventData(Guid eventId, object evnt, IDictionary<string, string> headers)
-        {
-            var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(evnt, SerializerSettings));
-
-            var eventHeaders = new Dictionary<string, string>(headers)
-            {
-                {EventClrTypeHeader, evnt.GetType().AssemblyQualifiedName}
-            };
-            var metadata = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventHeaders, SerializerSettings));
-            var typeName = evnt.GetType().Name;
-
-            return new EventData(eventId, typeName, true, data, metadata);
+                var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(evnt, SerializerSettings));
+                var eventHeaders = new Dictionary<string, string>(headers)
+                {
+                    {EventClrTypeHeader, evnt.GetType().AssemblyQualifiedName}
+                };
+                var metadata = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventHeaders, SerializerSettings));
+                var typeName = evnt.GetType().Name;
+                return new EventData(eventId, typeName, true, data, metadata);
+            }
         }
 
         private string StreamName(string streamName)
         {
             var sp = streamName.Split(new[] { '-' }, 2);
             return $"{sp[0]}-{sp[1].Replace("-", "")}";
-        }
-    }
-
-    internal static class EnumerableExtensions
-    {
-        internal static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int batchSize)
-        {
-            using (var enumerator = source.GetEnumerator())
-            {
-                while (enumerator.MoveNext())
-                {
-                    yield return YieldBatchElements(enumerator, batchSize - 1);
-                }
-            }
-        }
-
-        private static IEnumerable<T> YieldBatchElements<T>(IEnumerator<T> source, int batchSize)
-        {
-            yield return source.Current;
-
-            for (var i = 0; i < batchSize && source.MoveNext(); i++)
-            {
-                yield return source.Current;
-            }
         }
     }
 }

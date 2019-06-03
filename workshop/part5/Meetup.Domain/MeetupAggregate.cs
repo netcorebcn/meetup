@@ -6,32 +6,17 @@ using System.Linq;
 #nullable enable
 namespace Meetup.Domain
 {
-    public class MeetupAggregate
+    public class MeetupAggregate : Aggregate<MeetupId>
     {
         private MeetupTitle Title = MeetupTitle.None;
         private Address Location = Address.None;
         private SeatsNumber NumberOfSeats = SeatsNumber.None;
         private DateTimeRange TimeRange = DateTimeRange.None;
         private MeetupState State = MeetupState.Created;
-        public MeetupId Id { get; private set; } = MeetupId.None;
-        private readonly List<object> _events = new List<object>();
-        public IEnumerable<object> Events => _events.AsEnumerable();
 
-        public static MeetupAggregate Build(MeetupId id, params object[] events)
-        {
-            var meetup = new MeetupAggregate(id);
-            events.ToList().ForEach(ev =>
-            {
-                meetup.State.EnsureCanRaiseEvent(ev.GetType());
-                meetup.When(ev);
-                meetup.EnsureInvariants();
-            });
-            return meetup;
-        }
+        private MeetupAggregate() { }
 
-        private MeetupAggregate(MeetupId id) => Id = id;
-
-        public MeetupAggregate(MeetupId id, MeetupTitle title) =>
+        public void Create(MeetupId id, MeetupTitle title) =>
             Apply(new Events.MeetupCreated(id, title));
 
         public void UpdateNumberOfSeats(SeatsNumber number) =>
@@ -61,8 +46,9 @@ namespace Meetup.Domain
         public void RejectRSVP(MemberId memberId, DateTime rejectedAt) =>
             Apply(new Events.RSVPRejected(Id, memberId, rejectedAt));
 
-        private void When(object @event)
+        protected override void When(object @event)
         {
+            State.EnsureCanRaiseEvent(@event.GetType());
             switch (@event)
             {
                 case Events.MeetupCreated ev:
@@ -94,7 +80,7 @@ namespace Meetup.Domain
             }
         }
 
-        private void EnsureInvariants()
+        protected override void EnsureInvariants()
         {
             var valid = Id != MeetupId.None && Title != MeetupTitle.None &&
             State switch
@@ -110,14 +96,6 @@ namespace Meetup.Domain
             {
                 throw new MeetupDomainException($"Invalid state {State}");
             }
-        }
-
-        private void Apply(object @event)
-        {
-            State.EnsureCanRaiseEvent(@event.GetType());
-            When(@event);
-            EnsureInvariants();
-            _events.Add(@event);
         }
     }
 }
