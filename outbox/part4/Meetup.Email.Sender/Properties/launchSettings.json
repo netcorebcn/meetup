@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Meetup.Email.Sender": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
